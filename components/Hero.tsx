@@ -10,58 +10,101 @@ const Hero: React.FC = () => {
   const { incrementScans, setLastAnalysisResult, lastAnalysisResult, language } = useApp();
   const [image, setImage] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const [progress, setProgress] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(10); 
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isProcessingRef = useRef(false);
-  
   const t = translations[language].hero;
 
   useEffect(() => {
     let interval: any;
     if (status === 'loading') {
       setProgress(0);
-      setTimeLeft(15);
+      setTimeLeft(10);
       interval = setInterval(() => {
-        setProgress(p => (p >= 98 ? p : p + (p < 80 ? 5 : 1)));
+        setProgress(p => (p >= 98 ? p : p + (p < 80 ? 10 : 1)));
         setTimeLeft(t => (t > 1 ? t - 1 : 1));
       }, 1000);
     }
     return () => clearInterval(interval);
   }, [status]);
 
-  const handleAnalyze = async () => {
-    if (isProcessingRef.current || !image) return;
+  const compressImage = (base64Str: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        // Reduced to 640px for maximum speed - plenty for AI to identify food
+        const MAX_WIDTH = 640;
+        const MAX_HEIGHT = 640;
+        let width = img.width;
+        let height = img.height;
 
-    isProcessingRef.current = true;
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        // Drastically lower quality to 0.5 to stay well under Vercel payload/timeout limits
+        resolve(canvas.toDataURL('image/jpeg', 0.5));
+      };
+    });
+  };
+
+  const handleAnalyze = async () => {
+    if (!image || status === 'loading') return;
+
     setStatus('loading');
+    setErrorMessage('');
     setLastAnalysisResult(null);
 
     try {
-      // Direct call to Gemini service for faster processing
-      const result = await analyzeMealImage(image, { chronicDiseases: '', dietProgram: '', activityLevel: 'moderate' });
+      const compressedImage = await compressImage(image);
+
+      // Tight 20s timeout for UI - Vercel Hobby will fail at 10s anyway
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Link Interrupted. Connection took too long.')), 18000)
+      );
+
+      const resultPromise = analyzeMealImage(compressedImage, { chronicDiseases: '', dietProgram: '', activityLevel: 'moderate' });
+      
+      const result: any = await Promise.race([resultPromise, timeoutPromise]);
       
       if (result) {
         const enriched = { 
           ...result, 
           timestamp: new Date().toLocaleString(), 
-          imageUrl: image 
+          imageUrl: compressedImage 
         };
         setProgress(100);
         setTimeout(() => {
           setLastAnalysisResult(enriched);
           incrementScans(enriched);
           setStatus('idle');
-        }, 500);
+        }, 800);
       } else {
-        setStatus('error');
+        throw new Error("No response from analytical node.");
       }
-    } catch (err) {
-      console.error("Scanner UI error:", err);
+    } catch (err: any) {
+      console.error("Scanner Error:", err);
+      // More helpful error messages
+      let msg = err.message || 'Transmission Interrupted';
+      if (msg.includes('fetch')) msg = 'Check Internet / API Status';
+      setErrorMessage(msg);
       setStatus('error');
-    } finally {
-      isProcessingRef.current = false;
     }
   };
 
@@ -119,12 +162,12 @@ const Hero: React.FC = () => {
                     </div>
                     <div className="w-full max-w-xs space-y-3 text-center">
                       <p className="text-[9px] font-black uppercase tracking-widest text-brand-primary">
-                        {language === 'ar' ? `المتبقي ~${timeLeft} ثانية` : `ESTIMATED: ~${timeLeft}S`}
+                        {language === 'ar' ? `المتبقي ~${timeLeft} ثانية` : `UPLOADING: ~${timeLeft}S`}
                       </p>
                       <div className="h-1 bg-white/10 rounded-full overflow-hidden">
                         <div className="h-full bg-brand-primary transition-all duration-500" style={{ width: `${progress}%` }} />
                       </div>
-                      <p className="text-[8px] text-white/40 uppercase tracking-widest">{language === 'ar' ? 'جاري الاتصال بالسحابة...' : 'ESTABLISHING CLOUD BRIDGE...'}</p>
+                      <p className="text-[8px] text-white/40 uppercase tracking-widest">{language === 'ar' ? 'تحليل سريع عبر السحاب...' : 'ULTRA-FAST CLOUD SCAN...'}</p>
                     </div>
                   </div>
                 )}
@@ -135,15 +178,17 @@ const Hero: React.FC = () => {
                       <AlertCircle size={40} className="text-red-500" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-serif font-bold text-white uppercase tracking-tight">{language === 'ar' ? 'فشل الاتصال' : 'CLOUD FAULT'}</h3>
-                      <p className="text-xs text-white/40 max-w-xs mx-auto italic">{language === 'ar' ? 'تأكد من إعداد مفتاح API في Vercel باسم API_KEY.' : 'Verify Vercel environment variable "API_KEY" is correctly set.'}</p>
+                      <h3 className="text-2xl font-serif font-bold text-white uppercase tracking-tight">{language === 'ar' ? 'فشل الربط' : 'NODE FAULT'}</h3>
+                      <p className="text-xs text-brand-primary font-bold px-4">{errorMessage}</p>
+                      <p className="text-[10px] text-white/30 max-w-xs mx-auto italic">{language === 'ar' ? 'تأكد من صحة مفتاح API في إعدادات Vercel.' : 'Verify Vercel Environment Variables: API_KEY.'}</p>
                     </div>
                     <button 
-                      onClick={handleAnalyze} 
+                      onClick={() => { setStatus('idle'); handleAnalyze(); }} 
                       className="px-10 py-4 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary transition-all border border-white/5"
                     >
                       {language === 'ar' ? 'إعادة المحاولة' : 'RETRY PROTOCOL'}
                     </button>
+                    <button onClick={() => setStatus('idle')} className="text-[9px] uppercase tracking-widest opacity-40 hover:opacity-100">{language === 'ar' ? 'إلغاء' : 'CANCEL'}</button>
                   </div>
                 )}
 
@@ -158,7 +203,6 @@ const Hero: React.FC = () => {
                     <div className="flex-grow flex flex-col md:flex-row p-8 gap-8 overflow-y-auto no-scrollbar">
                        <div className="md:w-1/2 rounded-3xl overflow-hidden h-48 md:h-auto border border-black/5 dark:border-white/5 shadow-2xl relative">
                           <img src={lastAnalysisResult.imageUrl} className="w-full h-full object-cover" alt="Meal" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
                        </div>
                        <div className="md:w-1/2 space-y-6">
                           <div className="grid grid-cols-2 gap-4">
@@ -167,7 +211,7 @@ const Hero: React.FC = () => {
                                 <span className="text-3xl font-serif font-bold text-brand-primary">{lastAnalysisResult.healthScore}</span>
                              </div>
                              <div className="p-4 bg-zinc-100 dark:bg-zinc-900 rounded-2xl border border-black/5 dark:border-white/5">
-                                <span className="text-[7px] font-black uppercase block opacity-40 mb-1 tracking-widest">CALORIC LOAD</span>
+                                <span className="text-[7px] font-black uppercase block opacity-40 mb-1 tracking-widest">CALORIES</span>
                                 <span className="text-3xl font-serif font-bold text-brand-dark dark:text-white">{lastAnalysisResult.totalCalories}</span>
                              </div>
                           </div>

@@ -2,31 +2,27 @@
 import { UserHealthProfile, MealAnalysisResult, MealPlanRequest, DayPlan, FeedbackEntry } from '../types.ts';
 
 /**
- * Note: We now route these calls through our internal Vercel API endpoints 
- * to protect the API key and avoid CORS issues in production.
+ * Bio-Bridge Central Communication Service
+ * Routes all traffic through Vercel API nodes.
  */
 
 export const analyzeMealImage = async (base64Image: string, profile: UserHealthProfile): Promise<MealAnalysisResult | null> => {
   try {
-    // Send request to our own serverless function
     const response = await fetch('/api/analyze-meal', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        image: base64Image,
-        profile 
-      }),
+      body: JSON.stringify({ image: base64Image, profile }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to communicate with analysis server');
+      const errorData = await response.json().catch(() => ({ error: 'Transmission Error' }));
+      throw new Error(errorData.details || errorData.error || 'Server connection failed');
     }
 
     return await response.json();
-  } catch (error) {
-    console.error("Analysis Request Failed:", error);
-    return null;
+  } catch (error: any) {
+    console.error("analyzeMealImage Error:", error);
+    throw error; 
   }
 };
 
@@ -38,10 +34,10 @@ export const generateMealPlan = async (request: MealPlanRequest, lang: string, f
       body: JSON.stringify({ request, feedback, lang }),
     });
 
-    if (!response.ok) throw new Error('Failed to generate plan');
+    if (!response.ok) throw new Error('Failed to synthesize plan');
     return await response.json();
   } catch (error) {
-    console.error("Plan Request Failed:", error);
+    console.error("generateMealPlan Error:", error);
     return null;
   }
 };
@@ -63,6 +59,5 @@ export const generateMascot = async (prompt: string): Promise<string | null> => 
 };
 
 export const isSystemKeyAvailable = async (): Promise<boolean> => {
-  // On the client side, we check if the bridge is active by pinging the status
-  return true; 
+  return true; // Key is server-side
 };
