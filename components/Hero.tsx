@@ -23,7 +23,7 @@ const Hero: React.FC = () => {
       setProgress(0);
       setTimeLeft(10);
       interval = setInterval(() => {
-        setProgress(p => (p >= 98 ? p : p + (p < 80 ? 15 : 1)));
+        setProgress(p => (p >= 98 ? p : p + (p < 85 ? 20 : 1)));
         setTimeLeft(t => (t > 1 ? t - 1 : 1));
       }, 1000);
     }
@@ -36,8 +36,8 @@ const Hero: React.FC = () => {
       img.src = base64Str;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        // Aggressive 400px limit for maximum speed while maintaining AI recognizability
-        const MAX_SIZE = 400; 
+        // Gemini handles 320px-512px very well for meal detection. 320px is tiny and fast.
+        const MAX_SIZE = 320; 
         let width = img.width;
         let height = img.height;
 
@@ -57,8 +57,8 @@ const Hero: React.FC = () => {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        // Extremely low quality 0.3 ensures payload is under 50KB
-        resolve(canvas.toDataURL('image/jpeg', 0.3));
+        // Extremely low quality 0.4 keeps payload under 30KB
+        resolve(canvas.toDataURL('image/jpeg', 0.4));
       };
     });
   };
@@ -73,9 +73,9 @@ const Hero: React.FC = () => {
     try {
       const compressedImage = await compressImage(image);
 
-      // Synchronize frontend timeout with Vercel's 10s limit
+      // We allow 15 seconds on frontend. Vercel kills at 10s, so we catch its 504.
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Bio-Bridge Timeout. Connection too slow.')), 11000)
+        setTimeout(() => reject(new Error('CONNECTION_TIMEOUT')), 15000)
       );
 
       const resultPromise = analyzeMealImage(compressedImage, { chronicDiseases: '', dietProgram: '', activityLevel: 'moderate' });
@@ -95,14 +95,18 @@ const Hero: React.FC = () => {
           setStatus('idle');
         }, 800);
       } else {
-        throw new Error("No signal from analytical node.");
+        throw new Error("EMPTY_RESPONSE");
       }
     } catch (err: any) {
       console.error("Scanner Error:", err);
       let msg = err.message || 'Transmission Interrupted';
-      if (msg.includes('504') || msg.includes('502') || msg.includes('timeout') || msg.includes('Too long')) {
-        msg = language === 'ar' ? 'انتهت مهلة الخادم. يرجى المحاولة بصورة أبسط.' : 'Server Timeout (10s). Please try a simpler photo.';
+      
+      if (msg === 'CONNECTION_TIMEOUT' || msg.includes('504') || msg.includes('502') || msg.includes('timeout') || msg.includes('Too long')) {
+        msg = language === 'ar' ? 'انتهت المهلة (10 ثوانٍ). يرجى التأكد من سرعة الإنترنت والمحاولة بصورة أصغر.' : 'Gateway Timeout (10s limit). Please try a clearer, smaller photo.';
+      } else if (msg === 'EMPTY_RESPONSE') {
+        msg = language === 'ar' ? 'استجابة فارغة من المختبر.' : 'No data received from lab.';
       }
+      
       setErrorMessage(msg);
       setStatus('error');
     }
@@ -167,7 +171,7 @@ const Hero: React.FC = () => {
                       <div className="h-1 bg-white/10 rounded-full overflow-hidden">
                         <div className="h-full bg-brand-primary transition-all duration-500" style={{ width: `${progress}%` }} />
                       </div>
-                      <p className="text-[8px] text-white/40 uppercase tracking-widest">{language === 'ar' ? 'جاري التحليل السريع...' : 'HIGH-SPEED PROCESSING...'}</p>
+                      <p className="text-[8px] text-white/40 uppercase tracking-widest">{language === 'ar' ? 'جاري التحليل فائق السرعة...' : 'HIGH-SPEED CLOUD ANALYSIS...'}</p>
                     </div>
                   </div>
                 )}
@@ -178,15 +182,15 @@ const Hero: React.FC = () => {
                       <AlertCircle size={40} className="text-red-500" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-serif font-bold text-white uppercase tracking-tight">{language === 'ar' ? 'خطأ في الربط' : 'NODE ERROR'}</h3>
+                      <h3 className="text-2xl font-serif font-bold text-white uppercase tracking-tight">{language === 'ar' ? 'خطأ في الربط' : 'LINK ERROR'}</h3>
                       <p className="text-xs text-brand-primary font-bold px-4">{errorMessage}</p>
-                      <p className="text-[10px] text-white/30 max-w-xs mx-auto italic">{language === 'ar' ? 'خطة Vercel المجانية لها مهلة 10 ثوانٍ.' : 'Vercel Hobby has a strict 10s limit.'}</p>
+                      <p className="text-[10px] text-white/30 max-w-xs mx-auto italic">{language === 'ar' ? 'مهلة Vercel Hobby هي 10 ثوانٍ.' : 'Vercel Hobby has a strict 10s limit.'}</p>
                     </div>
                     <button 
                       onClick={() => { setStatus('idle'); handleAnalyze(); }} 
                       className="px-10 py-4 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary transition-all border border-white/5"
                     >
-                      {language === 'ar' ? 'إعادة المحاولة' : 'RETRY PROTOCOL'}
+                      {language === 'ar' ? 'إعادة المحاولة' : 'RETRY'}
                     </button>
                     <button onClick={() => setStatus('idle')} className="text-[9px] uppercase tracking-widest opacity-40 hover:opacity-100">{language === 'ar' ? 'إلغاء' : 'CANCEL'}</button>
                   </div>

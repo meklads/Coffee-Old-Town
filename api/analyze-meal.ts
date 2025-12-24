@@ -5,7 +5,7 @@ export const config = {
   maxDuration: 10, // Hard limit for Vercel Hobby
   api: {
     bodyParser: {
-      sizeLimit: '1mb', // Extremely tight limit for speed
+      sizeLimit: '1mb',
     },
   },
 };
@@ -66,25 +66,26 @@ export default async function handler(req: any, res: any) {
       contents: {
         parts: [
           { inlineData: { data: base64Data, mimeType: 'image/jpeg' } },
-          { text: "Brief meal analysis. Output JSON." }
+          { text: "Analyze meal. JSON only." }
         ]
       },
       config: { 
         responseMimeType: "application/json", 
         responseSchema: mealAnalysisSchema,
-        temperature: 0,
+        temperature: 0.1,
         thinkingConfig: { thinkingBudget: 0 }
       }
     });
 
     const text = response.text;
     if (!text) {
-      throw new Error("Empty response from AI engine.");
+      throw new Error("No response from AI core.");
     }
 
     return res.status(200).json(JSON.parse(text.trim()));
   } catch (error: any) {
     console.error("API Error:", error);
+    // If it's a timeout error from the model itself or a fetch error
     return res.status(500).json({ 
       error: 'Analysis Failed', 
       details: error.message 
