@@ -10,67 +10,26 @@ const Hero: React.FC = () => {
   const { incrementScans, setLastAnalysisResult, lastAnalysisResult, language } = useApp();
   const [image, setImage] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
-  const [loadingPhase, setLoadingPhase] = useState(0);
   const [progress, setProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(15);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isProcessingRef = useRef(false);
-  const watchdogRef = useRef<any>(null);
   
   const t = translations[language].hero;
-  const phases = language === 'ar' 
-    ? ['جاري المسح الضوئي...', 'فك الشفرة...', 'تحليل البيانات...', 'إتمام التقرير...']
-    : ['SCANNING...', 'DECODING...', 'ANALYZING...', 'FINALIZING...'];
 
   useEffect(() => {
-    let phaseInterval: any;
-    let progressInterval: any;
-
+    let interval: any;
     if (status === 'loading') {
       setProgress(0);
       setTimeLeft(15);
-      
-      phaseInterval = setInterval(() => {
-        setLoadingPhase(prev => (prev + 1) % phases.length);
-      }, 2000);
-
-      progressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 98) return prev;
-          const increment = prev < 70 ? 5 : (prev < 90 ? 2 : 0.5);
-          return Math.min(prev + increment, 98);
-        });
-        setTimeLeft(prev => (prev > 1 ? prev - 1 : 1));
+      interval = setInterval(() => {
+        setProgress(p => (p >= 98 ? p : p + (p < 80 ? 5 : 1)));
+        setTimeLeft(t => (t > 1 ? t - 1 : 1));
       }, 1000);
-    } else {
-      setProgress(0);
-      setTimeLeft(15);
     }
-
-    return () => {
-      clearInterval(phaseInterval);
-      clearInterval(progressInterval);
-    };
-  }, [status, phases.length]);
-
-  const compressImage = (base64: string): Promise<string> => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.src = base64;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const maxDim = 800; 
-        let w = img.width, h = img.height;
-        if (w > h) { if (w > maxDim) { h *= maxDim / w; w = maxDim; } }
-        else { if (h > maxDim) { w *= maxDim / h; h = maxDim; } }
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', 0.7));
-      };
-    });
-  };
+    return () => clearInterval(interval);
+  }, [status]);
 
   const handleAnalyze = async () => {
     if (isProcessingRef.current || !image) return;
@@ -79,31 +38,19 @@ const Hero: React.FC = () => {
     setStatus('loading');
     setLastAnalysisResult(null);
 
-    // Timeout safety
-    if (watchdogRef.current) clearTimeout(watchdogRef.current);
-    watchdogRef.current = setTimeout(() => {
-      if (isProcessingRef.current) {
-        setStatus('error');
-        isProcessingRef.current = false;
-      }
-    }, 45000);
-
     try {
-      const result = await analyzeMealImage(
-        image, 
-        { chronicDiseases: '', dietProgram: '', activityLevel: 'moderate' }
-      );
+      const result = await analyzeMealImage(image, { chronicDiseases: '', dietProgram: '', activityLevel: 'moderate' });
       
       if (result && isProcessingRef.current) {
-        const enrichedResult = {
+        const enriched = { 
           ...result, 
           timestamp: new Date().toLocaleString(), 
-          imageUrl: image
+          imageUrl: image 
         };
         setProgress(100);
         setTimeout(() => {
-          setLastAnalysisResult(enrichedResult);
-          incrementScans(enrichedResult);
+          setLastAnalysisResult(enriched);
+          incrementScans(enriched);
           setStatus('idle');
         }, 500);
       } else {
@@ -114,21 +61,19 @@ const Hero: React.FC = () => {
       setStatus('error');
     } finally {
       isProcessingRef.current = false;
-      if (watchdogRef.current) clearTimeout(watchdogRef.current);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const r = new FileReader();
-      r.onloadend = async () => { 
-        const compressed = await compressImage(r.result as string);
-        setImage(compressed); 
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(reader.result as string);
         setStatus('idle');
-        setLastAnalysisResult(null); 
+        setLastAnalysisResult(null);
       };
-      r.readAsDataURL(file);
+      reader.readAsDataURL(file);
     }
   };
 
@@ -153,54 +98,39 @@ const Hero: React.FC = () => {
             <button 
               onClick={() => fileInputRef.current?.click()} 
               disabled={status === 'loading'}
-              className="px-8 py-4 bg-brand-dark text-white dark:border dark:border-white/10 rounded-full font-black text-[9px] uppercase tracking-[0.4em] hover:bg-brand-primary transition-all disabled:opacity-50"
+              className="px-8 py-4 bg-brand-dark text-white rounded-full font-black text-[9px] uppercase tracking-[0.4em] transition-all duration-300 hover:bg-brand-primary hover:scale-105 hover:shadow-2xl hover:shadow-brand-primary/20 active:bg-gradient-to-r active:from-brand-primary active:to-brand-success active:scale-95 disabled:opacity-50"
             >
               {t.cta}
             </button>
           </div>
 
           <div className="lg:col-span-7 order-1 lg:order-2 w-full">
-            <div className="relative aspect-[16/10] bg-white dark:bg-zinc-950 border border-brand-dark/[0.08] dark:border-white/5 rounded-[40px] overflow-hidden shadow-2xl dark:shadow-none">
+            <div className="relative aspect-[16/10] bg-white dark:bg-zinc-950 border border-brand-dark/[0.08] dark:border-white/5 rounded-[40px] overflow-hidden shadow-2xl">
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
 
                 {status === 'loading' && (
-                  <div className="absolute inset-0 z-50 bg-brand-dark/95 backdrop-blur-xl flex flex-col items-center justify-center space-y-8 p-12 text-white">
+                  <div className="absolute inset-0 z-50 bg-brand-dark/95 backdrop-blur-xl flex flex-col items-center justify-center space-y-6 p-8 text-white">
                     <div className="relative mb-4">
-                      <div className="w-24 h-24 rounded-full border-[3px] border-brand-primary/10 border-t-brand-primary animate-spin" />
-                      <Activity size={28} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-brand-primary animate-pulse" />
+                      <div className="w-20 h-20 rounded-full border-2 border-brand-primary/10 border-t-brand-primary animate-spin" />
+                      <Activity size={24} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-brand-primary animate-pulse" />
                     </div>
-                    
-                    <div className="w-full max-w-xs space-y-4">
-                      <div className="space-y-2 text-center">
-                        <p className="text-[10px] font-black text-brand-primary uppercase tracking-[0.6em] animate-pulse">
-                          {phases[loadingPhase]}
-                        </p>
-                        <p className="text-[8px] font-medium text-white/40 uppercase tracking-widest">
-                          {language === 'ar' ? `متبقي حوالي ${timeLeft} ثوانٍ` : `Estimated remaining: ~${timeLeft}s`}
-                        </p>
-                      </div>
-
-                      <div className="relative h-1 w-full bg-white/10 rounded-full overflow-hidden">
-                        <div 
-                          className="absolute top-0 left-0 h-full bg-brand-primary transition-all duration-1000 ease-out"
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                      
-                      <div className="flex justify-between text-[7px] font-black text-white/20 uppercase tracking-widest">
-                        <span>{Math.round(progress)}%</span>
-                        <span>{language === 'ar' ? 'معالجة حيوية' : 'BIOMETRIC PROC'}</span>
+                    <div className="w-full max-w-xs space-y-3">
+                      <p className="text-[9px] text-center font-black uppercase tracking-widest text-brand-primary">
+                        {language === 'ar' ? `المتبقي ~${timeLeft} ثانية` : `ESTIMATED: ~${timeLeft}S`}
+                      </p>
+                      <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-brand-primary transition-all duration-500" style={{ width: `${progress}%` }} />
                       </div>
                     </div>
                   </div>
                 )}
 
                 {status === 'error' && (
-                  <div className="absolute inset-0 z-50 bg-brand-dark/98 backdrop-blur-2xl flex flex-col items-center justify-center space-y-8 p-12 text-center text-white">
-                    <AlertCircle size={32} className="text-red-500 animate-pulse" />
-                    <h3 className="text-xl font-serif font-bold tracking-tight">System Fault</h3>
-                    <button onClick={handleAnalyze} className="px-10 py-4 bg-white/5 border border-white/10 text-white rounded-full font-black text-[9px] uppercase tracking-[0.5em] hover:bg-brand-primary transition-all">
-                      <RefreshCw size={12} className="inline mr-2" /> RESYNC
+                  <div className="absolute inset-0 z-50 bg-brand-dark/98 flex flex-col items-center justify-center space-y-4 p-8 text-white text-center">
+                    <AlertCircle size={32} className="text-red-500" />
+                    <h3 className="text-xl font-serif font-bold">Analysis Fault</h3>
+                    <button onClick={handleAnalyze} className="px-8 py-3 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary transition-colors">
+                      RETRY SCAN
                     </button>
                   </div>
                 )}
@@ -208,21 +138,23 @@ const Hero: React.FC = () => {
                 {lastAnalysisResult ? (
                   <div className="absolute inset-0 flex flex-col animate-fade-in bg-white dark:bg-zinc-950">
                     <div className="p-4 border-b border-brand-dark/[0.04] dark:border-white/5 flex justify-between items-center bg-zinc-50 dark:bg-zinc-900/50">
-                       <h3 className="text-[10px] font-serif font-bold uppercase tracking-tight truncate">{lastAnalysisResult.summary}</h3>
-                       <button onClick={() => { setImage(null); setLastAnalysisResult(null); setStatus('idle'); }} className="p-2 opacity-20 hover:opacity-100"><RefreshCw size={10} /></button>
+                       <h3 className="text-[10px] font-serif font-bold uppercase truncate pr-4">{lastAnalysisResult.summary}</h3>
+                       <button onClick={() => { setImage(null); setLastAnalysisResult(null); setStatus('idle'); }} className="p-2 opacity-30 hover:opacity-100 transition-opacity">
+                        <RefreshCw size={12} />
+                       </button>
                     </div>
                     <div className="flex-grow flex flex-col md:flex-row p-6 gap-6 overflow-y-auto no-scrollbar">
-                       <div className="md:w-1/2 rounded-3xl overflow-hidden border border-black/[0.05] dark:border-white/5 h-40 md:h-auto">
+                       <div className="md:w-1/2 rounded-3xl overflow-hidden h-40 md:h-auto border border-black/5 dark:border-white/5">
                           <img src={lastAnalysisResult.imageUrl} className="w-full h-full object-cover" alt="Meal" />
                        </div>
-                       <div className="md:w-1/2 space-y-5">
+                       <div className="md:w-1/2 space-y-4">
                           <div className="grid grid-cols-2 gap-3">
-                             <div className="p-3 bg-brand-primary/[0.03] rounded-2xl border border-brand-primary/10">
-                                <span className="text-[5px] font-black uppercase block opacity-40 mb-1">SCORE</span>
+                             <div className="p-3 bg-brand-primary/5 rounded-2xl border border-brand-primary/10">
+                                <span className="text-[6px] font-black uppercase block opacity-40 mb-1">HEALTH SCORE</span>
                                 <span className="text-lg font-serif font-bold text-brand-primary">{lastAnalysisResult.healthScore}</span>
                              </div>
-                             <div className="p-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-black/[0.03] dark:border-white/5">
-                                <span className="text-[5px] font-black uppercase block opacity-40 mb-1">CALORIES</span>
+                             <div className="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-2xl border border-black/5 dark:border-white/5">
+                                <span className="text-[6px] font-black uppercase block opacity-40 mb-1">TOTAL KCAL</span>
                                 <span className="text-lg font-serif font-bold">{lastAnalysisResult.totalCalories}</span>
                              </div>
                           </div>
@@ -232,31 +164,30 @@ const Hero: React.FC = () => {
                   </div>
                 ) : (
                   status !== 'error' && (
-                    <div onClick={() => status === 'idle' && fileInputRef.current?.click()} className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer bg-zinc-50 dark:bg-zinc-900/20">
+                    <div onClick={() => status === 'idle' && fileInputRef.current?.click()} className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer bg-zinc-50 dark:bg-zinc-900/20 group">
                       {image ? (
                         <div className="absolute inset-0">
-                           <img src={image} className="w-full h-full object-cover opacity-30 blur-[2px]" alt="Preview" />
+                           <img src={image} className="w-full h-full object-cover opacity-30 blur-[2px] transition-all group-hover:blur-0" alt="Preview" />
+                           <div className="absolute inset-0 flex items-center justify-center">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleAnalyze(); }} 
+                                className="px-10 py-4 bg-brand-dark text-white rounded-full font-black text-[9px] uppercase tracking-[0.5em] border border-white/10 transition-all duration-300 shadow-2xl scale-100 hover:scale-105 hover:bg-brand-primary hover:tracking-[0.6em] active:bg-gradient-to-r active:from-brand-primary active:to-brand-success active:scale-95"
+                              >
+                                <Zap size={14} className="inline mr-2 text-brand-primary" /> START SCAN
+                              </button>
+                           </div>
                         </div>
                       ) : (
-                        <div className="flex flex-col items-center gap-4 opacity-20">
-                          <ImageIcon size={32} />
-                          <span className="text-[7px] font-black uppercase tracking-[0.5em]">UPLOAD IMAGE</span>
+                        <div className="flex flex-col items-center gap-4 opacity-20 group-hover:opacity-40 transition-opacity">
+                          <ImageIcon size={32} strokeWidth={1} />
+                          <span className="text-[7px] font-black uppercase tracking-[0.5em]">CLICK TO UPLOAD MEAL</span>
                         </div>
-                      )}
-                      {image && status === 'idle' && (
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); handleAnalyze(); }} 
-                          className="relative z-10 px-10 py-4 bg-brand-dark text-white rounded-full font-black text-[9px] uppercase tracking-[0.5em] flex items-center gap-3 border border-white/10 hover:bg-brand-primary transition-all shadow-xl"
-                        >
-                          <Zap size={14} className="text-brand-primary" /> START SCAN
-                        </button>
                       )}
                     </div>
                   )
                 )}
             </div>
           </div>
-
         </div>
       </div>
     </section>
