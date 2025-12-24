@@ -1,7 +1,6 @@
 
 import React from 'react';
-// Added ArrowUpRight to imports
-import { Activity, Clock, Flame, ChevronRight, Share2, Globe, ArrowUpRight } from 'lucide-react';
+import { Clock, Flame, ChevronRight, Share2, Globe, ArrowUpRight } from 'lucide-react';
 import { Recipe, SectionId } from '../types.ts';
 import { useApp } from '../context/AppContext.tsx';
 
@@ -36,65 +35,51 @@ const TrendingRecipes: React.FC = () => {
   ];
 
   return (
-    <section id={SectionId.PHASE_04_ARCHIVE} className="py-48 bg-brand-light relative overflow-hidden">
+    <section id={SectionId.PHASE_04_ARCHIVE} className="py-32 bg-brand-light dark:bg-brand-dark relative overflow-hidden transition-colors duration-1000">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col items-center text-center mb-32 space-y-10">
-           <div className="space-y-4">
-              <div className="inline-flex items-center gap-4 px-6 py-2 bg-brand-dark text-brand-primary rounded-full text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl">
+        
+        <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-10">
+           <div className="space-y-6">
+              <div className="inline-flex items-center gap-3 px-5 py-2 bg-brand-dark dark:bg-brand-primary/10 text-brand-primary rounded-full text-[9px] font-black uppercase tracking-[0.4em] shadow-lg border border-brand-primary/10">
                  <Globe size={14} />
-                 <span>PHASE 04: GLOBAL SYNCHRONIZATION</span>
+                 <span>GLOBAL SYNCHRONIZATION</span>
               </div>
-              <h2 className="text-5xl md:text-[100px] font-serif font-bold text-brand-dark leading-[0.8] tracking-tighter">
-                Trending <br /> <span className="text-brand-primary italic font-normal">Systems.</span>
+              <h2 className="text-4xl md:text-6xl font-serif font-bold text-brand-dark dark:text-white leading-none tracking-tighter">
+                Trending <span className="text-brand-primary italic font-normal">Systems.</span>
               </h2>
            </div>
-           <p className="text-brand-dark/40 text-2xl font-medium max-w-2xl italic leading-relaxed">
-             Live biometric data reveals the most effective protocols currently adopted by our global network of elite performers.
-           </p>
+           <button 
+             onClick={() => { setView('vaults'); window.scrollTo(0,0); }}
+             className="hidden md:flex items-center gap-4 text-brand-dark/40 dark:text-white/40 hover:text-brand-primary transition-colors text-[10px] font-black uppercase tracking-[0.4em] border-b border-brand-dark/5 pb-2"
+           >
+             View Complete Archive <ChevronRight size={16} />
+           </button>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-16">
-          {recipes.map((recipe, idx) => (
-            <div key={recipe.id} className={`group cursor-pointer relative ${idx === 1 ? 'md:translate-y-20' : ''}`}>
-               <div className="relative aspect-[4/5] rounded-[64px] overflow-hidden mb-10 bg-brand-sand/20 shadow-2xl group-hover:shadow-[0_80px_100px_-30px_rgba(194,163,107,0.25)] transition-all duration-1000">
-                  <img src={recipe.image} className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" alt={recipe.title} />
+        <div className="grid md:grid-cols-3 gap-8">
+          {recipes.map((recipe) => (
+            <div key={recipe.id} className="group cursor-pointer relative">
+               <div className="relative aspect-[3/4] rounded-[40px] overflow-hidden mb-6 bg-brand-sand/10 shadow-xl transition-all duration-700 hover:shadow-2xl">
+                  <img src={recipe.image} className="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-[2s] group-hover:scale-110" alt={recipe.title} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/80 via-transparent to-transparent opacity-80" />
                   
-                  <div className="absolute top-10 right-10 flex flex-col items-end gap-3 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-700">
-                     <button className="w-12 h-12 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center text-white border border-white/20 hover:bg-brand-primary transition-colors">
-                        <Share2 size={18} />
-                     </button>
-                  </div>
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-transparent to-transparent opacity-60" />
-                  
-                  <div className="absolute bottom-12 left-12 right-12">
-                     <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-brand-primary text-white rounded-full text-[9px] font-black uppercase tracking-[0.3em] mb-4">
-                        {recipe.category}
-                     </div>
-                     <h3 className="text-4xl font-serif font-bold text-white leading-tight tracking-tight group-hover:text-brand-primary transition-colors">{recipe.title}</h3>
+                  <div className="absolute bottom-8 left-8 right-8 space-y-3">
+                     <span className="text-[7px] font-black uppercase tracking-[0.4em] text-brand-primary">{recipe.category}</span>
+                     <h3 className="text-2xl font-serif font-bold text-white leading-tight tracking-tight">{recipe.title}</h3>
                   </div>
                </div>
 
-               <div className="px-6 space-y-6">
-                  <div className="flex items-center justify-between text-[11px] font-black text-brand-dark/20 uppercase tracking-[0.4em] border-b border-brand-dark/5 pb-6">
-                     <span className="flex items-center gap-3"><Clock size={16} className="text-brand-primary/40" /> {recipe.time}</span>
-                     <span className="flex items-center gap-3"><Flame size={16} className="text-brand-primary/40" /> {recipe.calories} LOAD</span>
+               <div className="px-4 flex items-center justify-between">
+                  <div className="flex gap-4 text-[9px] font-black text-brand-dark/20 dark:text-white/20 uppercase tracking-widest">
+                     <span className="flex items-center gap-2"><Clock size={12} /> {recipe.time}</span>
+                     <span className="flex items-center gap-2"><Flame size={12} /> {recipe.calories}</span>
                   </div>
-                  <button onClick={() => setView('vaults')} className="inline-flex items-center gap-4 text-brand-dark font-black text-[10px] uppercase tracking-[0.6em] group-hover:text-brand-primary transition-colors">
-                    Access Protocol <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                  </button>
+                  <div className="p-2 rounded-full border border-brand-dark/5 dark:border-white/5 opacity-0 group-hover:opacity-100 transition-all">
+                    <ArrowUpRight size={14} className="text-brand-primary" />
+                  </div>
                </div>
             </div>
           ))}
-        </div>
-
-        <div className="mt-64 text-center">
-           <button 
-             onClick={() => setView('vaults')}
-             className="px-20 py-8 bg-brand-dark text-white rounded-[40px] font-black text-[11px] uppercase tracking-[0.6em] hover:bg-brand-primary transition-all shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] flex items-center gap-6 mx-auto group"
-           >
-             Enter The Global Archive <ArrowUpRight size={20} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-           </button>
         </div>
       </div>
     </section>

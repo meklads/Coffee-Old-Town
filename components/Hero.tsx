@@ -23,7 +23,7 @@ const Hero: React.FC = () => {
       setProgress(0);
       setTimeLeft(10);
       interval = setInterval(() => {
-        setProgress(p => (p >= 98 ? p : p + (p < 85 ? 20 : 1)));
+        setProgress(p => (p >= 98 ? p : p + (p < 85 ? 15 : 1)));
         setTimeLeft(t => (t > 1 ? t - 1 : 1));
       }, 1000);
     }
@@ -36,8 +36,8 @@ const Hero: React.FC = () => {
       img.src = base64Str;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        // Gemini handles 320px-512px very well for meal detection. 320px is tiny and fast.
-        const MAX_SIZE = 320; 
+        // Ultra-small footprint (256px) for instantaneous upload
+        const MAX_SIZE = 256; 
         let width = img.width;
         let height = img.height;
 
@@ -57,8 +57,8 @@ const Hero: React.FC = () => {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        // Extremely low quality 0.4 keeps payload under 30KB
-        resolve(canvas.toDataURL('image/jpeg', 0.4));
+        // Low quality 0.3 ensures payload is typically < 20KB
+        resolve(canvas.toDataURL('image/jpeg', 0.3));
       };
     });
   };
@@ -73,9 +73,9 @@ const Hero: React.FC = () => {
     try {
       const compressedImage = await compressImage(image);
 
-      // We allow 15 seconds on frontend. Vercel kills at 10s, so we catch its 504.
+      // 20s frontend timeout. We expect Vercel to fail at 10s if it can't process in time.
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('CONNECTION_TIMEOUT')), 15000)
+        setTimeout(() => reject(new Error('CONNECTION_TIMEOUT')), 20000)
       );
 
       const resultPromise = analyzeMealImage(compressedImage, { chronicDiseases: '', dietProgram: '', activityLevel: 'moderate' });
@@ -98,13 +98,16 @@ const Hero: React.FC = () => {
         throw new Error("EMPTY_RESPONSE");
       }
     } catch (err: any) {
-      console.error("Scanner Error:", err);
-      let msg = err.message || 'Transmission Interrupted';
+      console.error("Scanner Link Error:", err);
+      let msg = err.message || 'Signal Lost';
       
-      if (msg === 'CONNECTION_TIMEOUT' || msg.includes('504') || msg.includes('502') || msg.includes('timeout') || msg.includes('Too long')) {
-        msg = language === 'ar' ? 'انتهت المهلة (10 ثوانٍ). يرجى التأكد من سرعة الإنترنت والمحاولة بصورة أصغر.' : 'Gateway Timeout (10s limit). Please try a clearer, smaller photo.';
+      // Categorize errors for better user guidance
+      if (msg === 'CONNECTION_TIMEOUT') {
+        msg = language === 'ar' ? 'فشل الاتصال: الشبكة بطيئة جداً.' : 'Connection Failed: Network too slow.';
+      } else if (msg.includes('504') || msg.includes('502') || msg.includes('timeout')) {
+        msg = language === 'ar' ? 'انتهت مهلة المختبر (10 ثوانٍ). يرجى المحاولة بصورة أوضح.' : 'Lab Timeout (10s limit). Please try a clearer photo.';
       } else if (msg === 'EMPTY_RESPONSE') {
-        msg = language === 'ar' ? 'استجابة فارغة من المختبر.' : 'No data received from lab.';
+        msg = language === 'ar' ? 'لم يتم استلام أي بيانات.' : 'No data received from cloud.';
       }
       
       setErrorMessage(msg);
@@ -171,7 +174,7 @@ const Hero: React.FC = () => {
                       <div className="h-1 bg-white/10 rounded-full overflow-hidden">
                         <div className="h-full bg-brand-primary transition-all duration-500" style={{ width: `${progress}%` }} />
                       </div>
-                      <p className="text-[8px] text-white/40 uppercase tracking-widest">{language === 'ar' ? 'جاري التحليل فائق السرعة...' : 'HIGH-SPEED CLOUD ANALYSIS...'}</p>
+                      <p className="text-[8px] text-white/40 uppercase tracking-widest">{language === 'ar' ? 'جاري التحليل السحابي السريع...' : 'HIGH-SPEED CLOUD ANALYSIS...'}</p>
                     </div>
                   </div>
                 )}
@@ -182,9 +185,9 @@ const Hero: React.FC = () => {
                       <AlertCircle size={40} className="text-red-500" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-serif font-bold text-white uppercase tracking-tight">{language === 'ar' ? 'خطأ في الربط' : 'LINK ERROR'}</h3>
+                      <h3 className="text-2xl font-serif font-bold text-white uppercase tracking-tight">{language === 'ar' ? 'فشل الإرسال' : 'LINK FAILURE'}</h3>
                       <p className="text-xs text-brand-primary font-bold px-4">{errorMessage}</p>
-                      <p className="text-[10px] text-white/30 max-w-xs mx-auto italic">{language === 'ar' ? 'مهلة Vercel Hobby هي 10 ثوانٍ.' : 'Vercel Hobby has a strict 10s limit.'}</p>
+                      <p className="text-[10px] text-white/30 max-w-xs mx-auto italic">{language === 'ar' ? 'يتم فرض حد 10 ثوانٍ على Vercel.' : 'A 10s execution limit is enforced by Vercel.'}</p>
                     </div>
                     <button 
                       onClick={() => { setStatus('idle'); handleAnalyze(); }} 

@@ -2,10 +2,10 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 export const config = {
-  maxDuration: 10, // Hard limit for Vercel Hobby
+  maxDuration: 10, // Vercel Hobby hard limit
   api: {
     bodyParser: {
-      sizeLimit: '1mb',
+      sizeLimit: '500kb', // Further reduced limit for faster ingress
     },
   },
 };
@@ -53,39 +53,36 @@ export default async function handler(req: any, res: any) {
   const apiKey = process.env.API_KEY;
 
   if (!apiKey) {
-    return res.status(500).json({ error: 'System key missing.' });
+    return res.status(500).json({ error: 'Core system key missing.' });
   }
 
   try {
     const ai = new GoogleGenAI({ apiKey });
     const base64Data = image.includes(',') ? image.split(',')[1] : image;
 
-    // Use gemini-3-flash-preview for the fastest possible turn-around
+    // Minimal prompt to save tokens and reasoning time
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: {
         parts: [
           { inlineData: { data: base64Data, mimeType: 'image/jpeg' } },
-          { text: "Analyze meal. JSON only." }
+          { text: "Meal analysis. JSON." }
         ]
       },
       config: { 
         responseMimeType: "application/json", 
         responseSchema: mealAnalysisSchema,
-        temperature: 0.1,
-        thinkingConfig: { thinkingBudget: 0 }
+        temperature: 0, // Faster, deterministic output
+        thinkingConfig: { thinkingBudget: 0 } // Disable reasoning overhead
       }
     });
 
     const text = response.text;
-    if (!text) {
-      throw new Error("No response from AI core.");
-    }
+    if (!text) throw new Error("UPSTREAM_TIMEOUT");
 
     return res.status(200).json(JSON.parse(text.trim()));
   } catch (error: any) {
-    console.error("API Error:", error);
-    // If it's a timeout error from the model itself or a fetch error
+    console.error("Critical Cloud Failure:", error);
     return res.status(500).json({ 
       error: 'Analysis Failed', 
       details: error.message 

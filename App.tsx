@@ -2,14 +2,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar.tsx';
 import Hero from './components/Hero.tsx';
-import MetabolicControlCenter from './components/MetabolicControlCenter.tsx';
 import SmartNutritionTool from './components/SmartNutritionTool.tsx';
 import MealScanner from './components/MealScanner.tsx';
 import VaultsPage from './components/VaultsPage.tsx';
 import RecipeDetail from './components/RecipeDetail.tsx';
 import Footer from './components/Footer.tsx';
-import Pricing from './components/Pricing.tsx';
-import Categories from './components/Categories.tsx';
+import KnowledgeHub from './components/Categories.tsx';
 import TrendingRecipes from './components/TrendingRecipes.tsx';
 import CoffeeCorner from './components/CoffeeCorner.tsx';
 import About from './components/About.tsx';
@@ -19,12 +17,11 @@ import { AppContext, UserTier } from './context/AppContext.tsx';
 import { Language } from './translations.ts';
 import { MealAnalysisResult, SectionId, ViewType, Recipe, FeedbackEntry, FeedbackSignal, Theme } from './types.ts';
 import { syncMealToCloud, fetchCloudHistory, testConnection } from './services/supabaseClient.ts';
-import { isSystemKeyAvailable } from './services/geminiService.ts';
 
 const App: React.FC = () => {
   const [language, setLanguageState] = useState<Language>(() => {
     const saved = localStorage.getItem('ot_lang') as Language;
-    return saved || 'en'; // Default to English
+    return saved || 'en';
   });
 
   const [tier, setTier] = useState<UserTier>('elite');
@@ -128,13 +125,20 @@ const App: React.FC = () => {
       case 'home':
         return (
           <div className="animate-fade-in space-y-0 overflow-hidden">
+            {/* Phase 01: The Core Action (Hero Scan) */}
             <Hero />
-            <MetabolicControlCenter />
-            <SmartNutritionTool /> 
-            <MealScanner /> 
+            
+            {/* Phase 02: Synthesis Lab (The Decision Hub) */}
+            <SmartNutritionTool />
+            
+            {/* Phase 03: Global Context (Trending) */}
             <TrendingRecipes />
-            <Categories />
-            <Pricing />
+            
+            {/* Phase 04: Refined Archive (The Discreet History) */}
+            <MealScanner />
+            
+            {/* Phase 05: The Knowledge Bridge */}
+            <KnowledgeHub />
           </div>
         );
       case 'vaults': return <VaultsPage />;

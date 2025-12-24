@@ -7,7 +7,7 @@ export const translations: Record<Language, any> = {
       phase01: '01. SCAN',
       phase02: '02. PROTOCOLS',
       phase03: '03. SYNTHESIS',
-      phase04: '04. ARCHIVE',
+      phase04: '04. JOURNAL',
       store: 'STORE',
       about: 'ABOUT'
     },
@@ -49,7 +49,7 @@ export const translations: Record<Language, any> = {
       phase01: '01. المسح الضوئي',
       phase02: '02. البروتوكولات',
       phase03: '03. التخليق',
-      phase04: '04. الأرشيف',
+      phase04: '04. المجلة',
       store: 'المتجر',
       about: 'عن المختبر'
     },
