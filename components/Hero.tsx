@@ -98,9 +98,10 @@ const Hero: React.FC = () => {
             <button 
               onClick={() => fileInputRef.current?.click()} 
               disabled={status === 'loading'}
-              className="px-8 py-4 bg-brand-dark text-white rounded-full font-black text-[9px] uppercase tracking-[0.4em] transition-all duration-300 hover:bg-brand-primary hover:scale-105 hover:shadow-2xl hover:shadow-brand-primary/20 active:bg-gradient-to-r active:from-brand-primary active:to-brand-success active:scale-95 disabled:opacity-50"
+              className="px-8 py-4 bg-brand-dark text-white rounded-full font-black text-[9px] uppercase tracking-[0.4em] transition-all duration-300 hover:bg-brand-primary hover:scale-105 hover:shadow-2xl hover:shadow-brand-primary/20 active:bg-gradient-to-r active:from-brand-primary active:to-brand-success active:scale-95 disabled:opacity-50 relative overflow-hidden group/scan"
             >
-              {t.cta}
+              <span className="relative z-10">{t.cta}</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-brand-primary to-brand-success opacity-0 group-active/scan:opacity-100 transition-opacity duration-300" />
             </button>
           </div>
 
@@ -114,23 +115,32 @@ const Hero: React.FC = () => {
                       <div className="w-20 h-20 rounded-full border-2 border-brand-primary/10 border-t-brand-primary animate-spin" />
                       <Activity size={24} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-brand-primary animate-pulse" />
                     </div>
-                    <div className="w-full max-w-xs space-y-3">
-                      <p className="text-[9px] text-center font-black uppercase tracking-widest text-brand-primary">
+                    <div className="w-full max-w-xs space-y-3 text-center">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-brand-primary">
                         {language === 'ar' ? `المتبقي ~${timeLeft} ثانية` : `ESTIMATED: ~${timeLeft}S`}
                       </p>
                       <div className="h-1 bg-white/10 rounded-full overflow-hidden">
                         <div className="h-full bg-brand-primary transition-all duration-500" style={{ width: `${progress}%` }} />
                       </div>
+                      <p className="text-[8px] text-white/40 uppercase tracking-widest">{language === 'ar' ? 'جاري تحليل الأنسجة والعناصر...' : 'ANALYZING TISSUES & MACROS...'}</p>
                     </div>
                   </div>
                 )}
 
                 {status === 'error' && (
-                  <div className="absolute inset-0 z-50 bg-brand-dark/98 flex flex-col items-center justify-center space-y-4 p-8 text-white text-center">
-                    <AlertCircle size={32} className="text-red-500" />
-                    <h3 className="text-xl font-serif font-bold">Analysis Fault</h3>
-                    <button onClick={handleAnalyze} className="px-8 py-3 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary transition-colors">
-                      RETRY SCAN
+                  <div className="absolute inset-0 z-50 bg-brand-dark/98 flex flex-col items-center justify-center space-y-6 p-8 text-white text-center">
+                    <div className="p-4 bg-red-500/10 rounded-full border border-red-500/20">
+                      <AlertCircle size={40} className="text-red-500" />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-2xl font-serif font-bold text-white uppercase tracking-tight">{language === 'ar' ? 'خطأ في النظام' : 'SYSTEM FAULT'}</h3>
+                      <p className="text-xs text-white/40 max-w-xs mx-auto">{language === 'ar' ? 'فشل الاتصال بخادم الذكاء الاصطناعي. يرجى التحقق من مفتاح API وإعادة المحاولة.' : 'Cloud analysis failed. Please verify API key and retry.'}</p>
+                    </div>
+                    <button 
+                      onClick={handleAnalyze} 
+                      className="px-12 py-4 bg-white/10 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary transition-all border border-white/5 active:scale-95"
+                    >
+                      {language === 'ar' ? 'إعادة المحاولة' : 'RETRY SCAN'}
                     </button>
                   </div>
                 )}
@@ -144,43 +154,47 @@ const Hero: React.FC = () => {
                        </button>
                     </div>
                     <div className="flex-grow flex flex-col md:flex-row p-6 gap-6 overflow-y-auto no-scrollbar">
-                       <div className="md:w-1/2 rounded-3xl overflow-hidden h-40 md:h-auto border border-black/5 dark:border-white/5">
+                       <div className="md:w-1/2 rounded-3xl overflow-hidden h-40 md:h-auto border border-black/5 dark:border-white/5 shadow-inner">
                           <img src={lastAnalysisResult.imageUrl} className="w-full h-full object-cover" alt="Meal" />
                        </div>
-                       <div className="md:w-1/2 space-y-4">
+                       <div className="md:w-1/2 space-y-6">
                           <div className="grid grid-cols-2 gap-3">
-                             <div className="p-3 bg-brand-primary/5 rounded-2xl border border-brand-primary/10">
-                                <span className="text-[6px] font-black uppercase block opacity-40 mb-1">HEALTH SCORE</span>
-                                <span className="text-lg font-serif font-bold text-brand-primary">{lastAnalysisResult.healthScore}</span>
+                             <div className="p-4 bg-brand-primary/5 rounded-2xl border border-brand-primary/10 group/stat">
+                                <span className="text-[7px] font-black uppercase block opacity-40 mb-1 tracking-widest">HEALTH SCORE</span>
+                                <span className="text-2xl font-serif font-bold text-brand-primary">{lastAnalysisResult.healthScore}</span>
                              </div>
-                             <div className="p-3 bg-zinc-100 dark:bg-zinc-900 rounded-2xl border border-black/5 dark:border-white/5">
-                                <span className="text-[6px] font-black uppercase block opacity-40 mb-1">TOTAL KCAL</span>
-                                <span className="text-lg font-serif font-bold">{lastAnalysisResult.totalCalories}</span>
+                             <div className="p-4 bg-zinc-100 dark:bg-zinc-900 rounded-2xl border border-black/5 dark:border-white/5">
+                                <span className="text-[7px] font-black uppercase block opacity-40 mb-1 tracking-widest">TOTAL KCAL</span>
+                                <span className="text-2xl font-serif font-bold">{lastAnalysisResult.totalCalories}</span>
                              </div>
                           </div>
-                          <p className="text-[10px] leading-relaxed italic opacity-70">"{lastAnalysisResult.personalizedAdvice}"</p>
+                          <div className="p-4 rounded-2xl border border-brand-primary/5 bg-brand-light dark:bg-brand-dark/30 italic text-[11px] leading-relaxed text-brand-dark/70 dark:text-white/60">
+                            "{lastAnalysisResult.personalizedAdvice}"
+                          </div>
                        </div>
                     </div>
                   </div>
                 ) : (
                   status !== 'error' && (
-                    <div onClick={() => status === 'idle' && fileInputRef.current?.click()} className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer bg-zinc-50 dark:bg-zinc-900/20 group">
+                    <div onClick={() => status === 'idle' && fileInputRef.current?.click()} className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer bg-zinc-50 dark:bg-zinc-900/20 group/upload transition-all">
                       {image ? (
                         <div className="absolute inset-0">
-                           <img src={image} className="w-full h-full object-cover opacity-30 blur-[2px] transition-all group-hover:blur-0" alt="Preview" />
+                           <img src={image} className="w-full h-full object-cover opacity-40 blur-[4px] transition-all duration-700 group-hover/upload:blur-0 group-hover/upload:opacity-60" alt="Preview" />
                            <div className="absolute inset-0 flex items-center justify-center">
                               <button 
                                 onClick={(e) => { e.stopPropagation(); handleAnalyze(); }} 
-                                className="px-10 py-4 bg-brand-dark text-white rounded-full font-black text-[9px] uppercase tracking-[0.5em] border border-white/10 transition-all duration-300 shadow-2xl scale-100 hover:scale-105 hover:bg-brand-primary hover:tracking-[0.6em] active:bg-gradient-to-r active:from-brand-primary active:to-brand-success active:scale-95"
+                                className="px-12 py-5 bg-brand-dark text-white rounded-full font-black text-[10px] uppercase tracking-[0.6em] border border-white/10 transition-all duration-500 shadow-3xl scale-100 hover:scale-110 hover:bg-brand-primary active:scale-95 active:bg-gradient-to-r active:from-brand-primary active:to-brand-success"
                               >
-                                <Zap size={14} className="inline mr-2 text-brand-primary" /> START SCAN
+                                <Zap size={16} className="inline mr-3 text-brand-primary animate-pulse" /> START DIAGNOSTIC
                               </button>
                            </div>
                         </div>
                       ) : (
-                        <div className="flex flex-col items-center gap-4 opacity-20 group-hover:opacity-40 transition-opacity">
-                          <ImageIcon size={32} strokeWidth={1} />
-                          <span className="text-[7px] font-black uppercase tracking-[0.5em]">CLICK TO UPLOAD MEAL</span>
+                        <div className="flex flex-col items-center gap-6 opacity-20 group-hover/upload:opacity-50 transition-all duration-500 scale-90 group-hover/upload:scale-100">
+                          <div className="w-20 h-20 rounded-full border-2 border-dashed border-brand-dark dark:border-white flex items-center justify-center">
+                            <ImageIcon size={32} strokeWidth={1} />
+                          </div>
+                          <span className="text-[8px] font-black uppercase tracking-[0.6em] text-center">{language === 'ar' ? 'انقر لرفع صورة الوجبة' : 'CLICK TO UPLOAD MEAL'}</span>
                         </div>
                       )}
                     </div>
