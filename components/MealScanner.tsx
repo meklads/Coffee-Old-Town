@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Clock,
   ArrowUpRight,
-  Fingerprint,
   Image as ImageIcon
 } from 'lucide-react';
 import { SectionId } from '../types.ts';
@@ -39,10 +38,10 @@ export default function MealScanner() {
   };
 
   return (
-    <section className="py-24 bg-brand-light dark:bg-[#080808] transition-colors duration-1000">
+    <section className="py-32 bg-brand-light dark:bg-[#080808] transition-colors duration-1000">
       <div className="max-w-7xl mx-auto px-6">
         
-        <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-8">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-20 gap-8">
            <div className="flex items-center gap-6">
               <div className="p-4 bg-brand-dark dark:bg-brand-primary/10 rounded-2xl text-brand-primary shadow-xl">
                  <HistoryIcon size={24} />
@@ -67,12 +66,12 @@ export default function MealScanner() {
 
         <div 
           ref={scrollContainerRef}
-          className="flex gap-6 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4"
+          className="flex gap-8 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4"
         >
           {validHistory.length > 0 ? (
             validHistory.map((item, idx) => (
-              <div key={idx} className="flex-shrink-0 w-[280px] snap-center">
-                 <div className="group bg-white dark:bg-zinc-900/40 border border-brand-dark/5 dark:border-white/5 rounded-[45px] p-6 hover:border-brand-primary/30 transition-all duration-700 hover:shadow-4xl relative overflow-hidden">
+              <div key={idx} className="flex-shrink-0 w-[300px] snap-center">
+                 <div className="group bg-white dark:bg-zinc-900/40 border border-brand-dark/[0.04] dark:border-white/5 rounded-[45px] p-6 hover:border-brand-primary/30 transition-all duration-700 hover:shadow-4xl relative overflow-hidden">
                     <div className="absolute top-8 left-8 z-20 flex items-center gap-2 bg-brand-primary text-white px-3 py-1 rounded-full text-[8px] font-black tracking-widest uppercase">
                        Validated
                     </div>
@@ -86,10 +85,10 @@ export default function MealScanner() {
                        <div className="flex items-center gap-2 text-[8px] font-black text-brand-dark/20 dark:text-white/20 uppercase tracking-widest">
                           <Clock size={12} /> {item.timestamp?.split(',')[0]}
                        </div>
-                       <h4 className="text-xl font-serif font-bold text-brand-dark dark:text-white truncate leading-tight">{item.summary}</h4>
+                       <h4 className="text-xl font-serif font-bold text-brand-dark dark:text-white truncate">{item.summary}</h4>
                        <div className="flex justify-between items-center pt-4 border-t border-brand-dark/5 dark:border-white/5">
-                          <span className="text-sm font-serif font-bold text-brand-primary tracking-tight">{item.totalCalories} KCAL</span>
-                          <button className="w-8 h-8 bg-brand-light dark:bg-brand-dark rounded-lg flex items-center justify-center text-brand-dark/20 dark:text-white/20 hover:text-brand-primary transition-all"><ArrowUpRight size={16} /></button>
+                          <span className="text-sm font-serif font-bold text-brand-primary">{item.totalCalories} KCAL</span>
+                          <button className="w-10 h-10 bg-brand-light dark:bg-brand-dark rounded-xl flex items-center justify-center text-brand-dark/20 dark:text-white/20 hover:text-brand-primary transition-all"><ArrowUpRight size={18} /></button>
                        </div>
                     </div>
                  </div>

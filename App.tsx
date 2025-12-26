@@ -121,8 +121,10 @@ const App: React.FC = () => {
   }, []);
 
   const HorizontalDivider = () => (
-    <div className="neural-divider-h">
-       <div className="neural-node-h" />
+    <div className="divider-container">
+       <div className="neural-divider-h">
+          <div className="neural-node-h" />
+       </div>
     </div>
   );
 
@@ -130,7 +132,7 @@ const App: React.FC = () => {
     switch(view) {
       case 'home':
         return (
-          <div className="animate-fade-in space-y-0 overflow-hidden">
+          <div className="animate-fade-in space-y-0 overflow-hidden bg-brand-light dark:bg-brand-dark">
             <Hero />
             <HorizontalDivider />
             <SmartNutritionTool />

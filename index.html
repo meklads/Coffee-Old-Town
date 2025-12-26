@@ -5,14 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Coffee Old Town | Luxury AI Health Lab</title>
-    <meta name="description" content="Premium AI Bio-Hacking & Coffee Lab. Analyze meals, synchronize metabolic data, and optimize your vitality with precision AI.">
+    <meta name="description" content="Premium AI Bio-Hacking & Coffee Lab. Analyze meals, optimize vitality with precision AI.">
     
-    <!-- Open Graph / Social Sharing -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Coffee Old Town | Luxury AI Health Lab">
-    <meta property="og:description" content="Precision Bio-Hacking and Metabolic Diagnostics powered by AI.">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=1200&q=80">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,400&family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
     <script>
@@ -30,19 +24,14 @@
                 dark: '#0A0A0A',
                 primary: '#C2A36B',
                 light: '#FDFDFD',
-                success: '#10B981',
                 gold: '#C2A36B',
-                cream: '#F7F5F2',
-                sand: '#EAE6DF'
+                cream: '#F7F5F2'
               }
             },
             animation: {
               'pulse-slow': 'pulse 6s cubic-bezier(0.4, 0, 0, 1) infinite',
               'scan': 'scan 6s linear infinite',
-              'float': 'float 4s ease-in-out infinite',
               'fade-in': 'fadeIn 1s ease-out forwards',
-              'fade-in-up': 'fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              'glow': 'glow 2s ease-in-out infinite alternate',
               'spin-slow': 'spin 12s linear infinite',
             },
             keyframes: {
@@ -52,19 +41,7 @@
                 '90%': { opacity: '1' },
                 '100%': { top: '100%', opacity: '0' },
               },
-              float: {
-                '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-15px)' },
-              },
-              fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-              fadeInUp: {
-                '0%': { opacity: '0', transform: 'translateY(15px)' },
-                '100%': { opacity: '1', transform: 'translateY(0)' },
-              },
-              glow: {
-                '0%': { boxShadow: '0 0 5px rgba(194, 163, 107, 0.2)' },
-                '100%': { boxShadow: '0 0 20px rgba(194, 163, 107, 0.6)' },
-              }
+              fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } }
             }
           }
         }
@@ -74,21 +51,23 @@
       ::-webkit-scrollbar { width: 5px; }
       ::-webkit-scrollbar-track { background: #FDFDFD; }
       ::-webkit-scrollbar-thumb { background: #C2A36B; border-radius: 10px; }
-      .dark ::-webkit-scrollbar-track { background: #0A0A0A; }
       html { scroll-behavior: smooth; }
-      body { background-color: #FDFDFD; color: #0A0A0A; overflow-x: hidden; transition: background-color 0.5s ease; }
+      body { background-color: #FDFDFD; color: #0A0A0A; overflow-x: hidden; }
       .dark body { background-color: #0A0A0A; color: #FDFDFD; }
       [dir="rtl"] { font-family: "IBM Plex Sans Arabic", sans-serif; }
       
-      /* Creative Horizontal Section Divider */
-      .neural-divider-h {
-        height: 1px;
+      /* Professional Small Divider */
+      .divider-container {
         width: 100%;
         display: flex;
-        align-items: center;
         justify-content: center;
+        padding: 40px 0;
+      }
+      .neural-divider-h {
+        height: 1px;
+        width: 140px;
         position: relative;
-        background: linear-gradient(to right, transparent, rgba(194,163,107,0.15) 20%, rgba(194,163,107,0.15) 80%, transparent);
+        background: linear-gradient(to right, transparent, rgba(194,163,107,0.4), transparent);
       }
       .neural-node-h {
         width: 4px;
@@ -96,12 +75,15 @@
         background: #C2A36B;
         border-radius: 50%;
         position: absolute;
-        box-shadow: 0 0 10px #C2A36B;
-        animation: pulseNode 4s ease-in-out infinite;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 12px #C2A36B;
+        animation: pulseNode 3s ease-in-out infinite;
       }
       @keyframes pulseNode {
-        0%, 100% { transform: scale(1); opacity: 0.3; }
-        50% { transform: scale(2.5); opacity: 1; box-shadow: 0 0 20px #C2A36B; }
+        0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+        50% { transform: translate(-50%, -50%) scale(1.8); opacity: 1; }
       }
     </style>
   <script type="importmap">
@@ -116,7 +98,7 @@
 }
 </script>
 </head>
-  <body class="font-sans antialiased selection:bg-brand-primary/30">
+  <body class="font-sans antialiased">
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
   </body>
