@@ -32,7 +32,6 @@ const App: React.FC = () => {
   const [isCloudConnected, setIsCloudConnected] = useState(false);
   const [isApiKeyLinked, setIsApiKeyLinked] = useState(false);
   
-  // Changed default theme to 'dark' for premium lab aesthetic
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('ot_theme') as Theme;
     return saved || 'dark';
@@ -62,7 +61,7 @@ const App: React.FC = () => {
     const root = window.document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
-      root.style.backgroundColor = '#0F0E0C'; // Espresso Black
+      root.style.backgroundColor = '#141210'; // Signature Dark Roast
     } else {
       root.classList.remove('dark');
       root.style.backgroundColor = '#FDFDFD'; // Clean White
