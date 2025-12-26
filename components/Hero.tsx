@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Microscope, Fingerprint, AlertCircle, CheckCircle2, RefreshCw, X, Flame, Activity, Zap, ShieldAlert, Link as LinkIcon, RotateCcw } from 'lucide-react';
+import { Plus, Microscope, Fingerprint, AlertCircle, CheckCircle2, RefreshCw, X, Flame, Activity, Zap, ShieldAlert, Link as LinkIcon, RotateCcw, Database, Sparkles } from 'lucide-react';
 import { SectionId } from '../types.ts';
 import { useApp } from '../context/AppContext.tsx';
 import { GoogleGenAI } from "@google/genai";
@@ -12,20 +12,39 @@ const Hero: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [progress, setProgress] = useState(0);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [archiveIdx, setArchiveIdx] = useState(0);
+  const [isArchiveVisible, setIsArchiveVisible] = useState(true);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const progressIntervalRef = useRef<number | null>(null);
 
+  const archiveSamples = [
+    "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=1200&q=80",
+    "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200&q=80",
+    "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1200&q=80",
+    "https://images.unsplash.com/photo-1466632311177-a35274394bb1?w=1200&q=80"
+  ];
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setMousePos({
-        x: (e.clientX / window.innerWidth - 0.5) * 10,
-        y: (e.clientY / window.innerHeight - 0.5) * 10
+        x: (e.clientX / window.innerWidth - 0.5) * 12,
+        y: (e.clientY / window.innerHeight - 0.5) * 12
       });
     };
+    
+    const archiveTimer = setInterval(() => {
+      setIsArchiveVisible(false);
+      setTimeout(() => {
+        setArchiveIdx(prev => (prev + 1) % archiveSamples.length);
+        setIsArchiveVisible(true);
+      }, 1000);
+    }, 7000);
+
     window.addEventListener('mousemove', handleMouseMove);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
+      clearInterval(archiveTimer);
       if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
     };
   }, []);
@@ -104,13 +123,13 @@ const Hero: React.FC = () => {
       <div className="absolute inset-0 pointer-events-none opacity-[0.012] z-0" style={{ backgroundImage: 'radial-gradient(#0A0A0A 0.5px, transparent 0.5px)', backgroundSize: '40px 40px' }} />
 
       <div className="max-w-7xl w-full mx-auto px-6 z-10">
-        <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+        <div className="grid lg:grid-cols-2 gap-20 lg:gap-32 items-center">
           
-          <div className="flex flex-col space-y-10 animate-fade-in">
+          <div className="flex flex-col space-y-12 animate-fade-in">
             <div className="space-y-6">
-               <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-white border border-brand-dark/[0.03] rounded-full shadow-sm">
+               <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-white border border-brand-dark/[0.05] rounded-full shadow-sm">
                   <div className={`w-1.5 h-1.5 rounded-full ${status === 'loading' ? 'bg-orange-400 animate-spin' : 'bg-brand-primary animate-pulse'}`} />
-                  <span className="text-[7px] font-black uppercase tracking-[0.4em] text-brand-dark/40">
+                  <span className="text-[7px] font-black uppercase tracking-[0.4em] text-brand-dark/50">
                     {status === 'loading' ? 'ANALYSIS_IN_PROGRESS' : 'BIO_DIAGNOSTIC_READY'}
                   </span>
                </div>
@@ -119,13 +138,47 @@ const Hero: React.FC = () => {
                  <h1 className="text-6xl md:text-8xl lg:text-[110px] font-serif font-bold text-brand-dark leading-[0.75] tracking-tighter">
                    Metabolic <br /><span className="text-brand-primary italic font-normal">Diagnostic.</span>
                  </h1>
-                 <p className="text-brand-dark/40 text-[11px] font-bold tracking-tight mt-10 ml-1 max-w-sm leading-relaxed">
+                 <p className="text-brand-dark/40 text-[11px] font-bold tracking-tight mt-10 ml-1 max-w-sm leading-relaxed uppercase">
                     PRECISION INSTRUMENTATION FOR REAL-TIME MOLECULAR DATA EXTRACTION AND CELLULAR CALIBRATION.
                  </p>
                </div>
             </div>
 
-            <div className="flex items-center gap-8 pt-8">
+            {/* Re-introduced Archive Viewport with 100% Clarity */}
+            <div className="relative group w-full max-w-lg aspect-[16/9] overflow-hidden rounded-[48px] bg-white border border-brand-dark/[0.08] shadow-2xl">
+               <div className={`absolute inset-0 transition-all duration-[1500ms] ${isArchiveVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}>
+                  <img 
+                    src={archiveSamples[archiveIdx]} 
+                    className="w-full h-full object-cover transition-transform duration-[10000ms] ease-out scale-100 group-hover:scale-110" 
+                    alt="Archive Specimen" 
+                  />
+               </div>
+               
+               {/* Minimal Gradient for text contrast only */}
+               <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-80 pointer-events-none" />
+               
+               <div className="absolute bottom-8 left-8 flex items-center gap-4">
+                  <div className="p-3 bg-brand-dark shadow-2xl rounded-2xl border border-white/10">
+                    <Database size={16} className="text-brand-primary" />
+                  </div>
+                  <div className="flex flex-col">
+                     <span className="text-[8px] font-black text-white/60 uppercase tracking-[0.5em] drop-shadow-md">SPECIMEN_ARCHIVE</span>
+                     <span className="text-sm font-serif font-bold text-white tracking-tight italic drop-shadow-md">Archive Record #{archiveIdx + 7042}</span>
+                  </div>
+               </div>
+
+               <div className="absolute top-8 right-8">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-brand-primary/90 backdrop-blur-md rounded-full shadow-xl">
+                     <Sparkles size={10} className="text-brand-dark" />
+                     <span className="text-[8px] font-black text-brand-dark uppercase tracking-widest">High Res Display</span>
+                  </div>
+               </div>
+               
+               {/* Subtle Lab scan lines overlay */}
+               <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '100% 8px' }} />
+            </div>
+
+            <div className="flex items-center gap-8">
                <div className="flex flex-col">
                   <span className="text-[8px] font-black text-brand-dark/20 uppercase tracking-widest">System Latency</span>
                   <span className="text-xl font-serif font-bold">0.12ms</span>
