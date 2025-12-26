@@ -21,13 +21,12 @@
             },
             colors: {
               brand: {
-                // Signature Dark Roast Palette (Warmer & More Organic)
-                dark: '#141210', // Deep Warm Coffee Bean
+                dark: '#141210', 
                 primary: '#C2A36B',
                 light: '#FDFDFD',
                 gold: '#C2A36B',
                 cream: '#F7F5F2',
-                surface: '#1C1917' // Warm surface for cards
+                surface: '#1C1917'
               }
             },
             animation: {
@@ -35,6 +34,8 @@
               'scan': 'scan 6s linear infinite',
               'fade-in': 'fadeIn 1s ease-out forwards',
               'spin-slow': 'spin 12s linear infinite',
+              'float-slow': 'float 25s ease-in-out infinite',
+              'float-reverse': 'float-reverse 30s ease-in-out infinite',
             },
             keyframes: {
               scan: {
@@ -43,7 +44,17 @@
                 '90%': { opacity: '1' },
                 '100%': { top: '100%', opacity: '0' },
               },
-              fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } }
+              fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+              float: {
+                '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+                '33%': { transform: 'translate(10%, 15%) scale(1.1)' },
+                '66%': { transform: 'translate(-5%, 10%) scale(0.9)' },
+              },
+              'float-reverse': {
+                '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+                '33%': { transform: 'translate(-15%, -10%) scale(0.95)' },
+                '66%': { transform: 'translate(10%, -15%) scale(1.05)' },
+              }
             }
           }
         }
@@ -61,7 +72,6 @@
       
       [dir="rtl"] { font-family: "IBM Plex Sans Arabic", sans-serif; }
       
-      /* Professional Small Divider */
       .divider-container {
         width: 100%;
         display: flex;
@@ -91,7 +101,7 @@
         50% { transform: translate(-50%, -50%) scale(1.8); opacity: 1; }
       }
 
-      /* Animated Grain Effect for Dark Mode Luxury */
+      /* Animated Grain Effect */
       .dark .bg-grain {
         position: relative;
       }
@@ -103,6 +113,24 @@
         opacity: 0.04;
         pointer-events: none;
         z-index: 0;
+      }
+
+      /* Coffee Nebula Glows */
+      .coffee-nebula-container {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: -1;
+        overflow: hidden;
+      }
+      .nebula-glow {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(160px);
+        opacity: 0.15;
+      }
+      .dark .nebula-glow {
+        opacity: 0.12;
       }
     </style>
   <script type="importmap">

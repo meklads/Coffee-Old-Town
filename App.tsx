@@ -61,10 +61,10 @@ const App: React.FC = () => {
     const root = window.document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
-      root.style.backgroundColor = '#141210'; // Signature Dark Roast
+      root.style.backgroundColor = '#141210'; 
     } else {
       root.classList.remove('dark');
-      root.style.backgroundColor = '#FDFDFD'; // Clean White
+      root.style.backgroundColor = '#FDFDFD';
     }
     localStorage.setItem('ot_theme', theme);
   }, [theme]);
@@ -169,8 +169,23 @@ const App: React.FC = () => {
       isApiKeyLinked, setIsApiKeyLinked
     }}>
       <div className="min-h-screen flex flex-col bg-brand-light dark:bg-brand-dark text-brand-dark dark:text-brand-light font-sans selection:bg-brand-primary/30 transition-colors duration-500 scroll-smooth">
+        
+        {/* Coffee Nebula Background Layers (Dark Mode only for better visibility) */}
+        {theme === 'dark' && (
+          <div className="coffee-nebula-container">
+            {/* Top Right Warm Glow */}
+            <div className="nebula-glow w-[600px] h-[600px] bg-brand-primary/20 top-[-10%] right-[-10%] animate-float-slow" />
+            
+            {/* Center Left Deep Coffee Glow */}
+            <div className="nebula-glow w-[500px] h-[500px] bg-[#3E2723]/30 top-[40%] left-[-5%] animate-float-reverse" />
+            
+            {/* Bottom Right Golden Amber Glow */}
+            <div className="nebula-glow w-[400px] h-[400px] bg-brand-gold/10 bottom-[5%] right-[5%] animate-float-slow" style={{ animationDelay: '-5s' }} />
+          </div>
+        )}
+
         <Navbar />
-        <main className="flex-grow">
+        <main className="flex-grow relative z-10">
           {renderContent()}
         </main>
         <Footer />
