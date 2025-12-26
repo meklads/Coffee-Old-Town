@@ -3,7 +3,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar.tsx';
 import Hero from './components/Hero.tsx';
 import SmartNutritionTool from './components/SmartNutritionTool.tsx';
-import BioNexus from './components/BioNexus.tsx';
 import MealScanner from './components/MealScanner.tsx';
 import VaultsPage from './components/VaultsPage.tsx';
 import RecipeDetail from './components/RecipeDetail.tsx';
@@ -62,11 +61,10 @@ const App: React.FC = () => {
     localStorage.setItem('ot_lang', language);
   }, [language]);
 
-  // Logic Change: Reset results when persona changes to prevent stale data
   useEffect(() => {
     localStorage.setItem('ot_persona', currentPersona);
     if (lastAnalysisResult) {
-       setLastAnalysisResult(null); // Clear previous scan results to force re-analysis with new persona
+       setLastAnalysisResult(null);
     }
   }, [currentPersona]);
 
@@ -151,10 +149,10 @@ const App: React.FC = () => {
       case 'home':
         return (
           <div className="animate-fade-in space-y-0 overflow-hidden bg-brand-light dark:bg-brand-dark bg-grain">
-            <BioNexus />
-            <HorizontalDivider />
+            {/* The Unified Command Center (Hybrid Hero) */}
             <Hero />
             <HorizontalDivider />
+            {/* The Synthesis stage remains second */}
             <SmartNutritionTool />
             <HorizontalDivider />
             <TrendingRecipes />
@@ -170,7 +168,7 @@ const App: React.FC = () => {
       case 'about': return <About />;
       case 'contact': return <ContactUs />;
       case 'faq': return <FAQ />;
-      default: return <BioNexus />;
+      default: return <Hero />;
     }
   };
 

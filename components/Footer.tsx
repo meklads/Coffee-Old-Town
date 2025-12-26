@@ -23,10 +23,9 @@ const Footer: React.FC = () => {
   };
 
   const navItems = [
-    { label: isAr ? '01. الهوية' : '01. IDENTITY', id: SectionId.BIO_NEXUS },
-    { label: isAr ? '02. التشخيص' : '02. DIAGNOSTIC', id: SectionId.PHASE_01_SCAN },
-    { label: isAr ? '03. التخليق' : '03. SYNTHESIS', id: SectionId.PHASE_03_SYNTHESIS },
-    { label: isAr ? '04. السجل' : '04. LEDGER', id: SectionId.PHASE_04_ARCHIVE },
+    { label: isAr ? '01. التشخيص' : '01. DIAGNOSTIC', id: SectionId.PHASE_01_SCAN },
+    { label: isAr ? '02. التخليق' : '02. SYNTHESIS', id: SectionId.PHASE_03_SYNTHESIS },
+    { label: isAr ? '03. السجل' : '03. LEDGER', id: SectionId.PHASE_04_ARCHIVE },
   ];
 
   return (

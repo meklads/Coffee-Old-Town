@@ -19,22 +19,17 @@ const Navbar: React.FC = () => {
 
   const navLinks = [
     { 
-      label: isAr ? '01. الهوية' : '01. IDENTITY', 
-      id: SectionId.BIO_NEXUS, 
-      type: 'scroll' 
-    },
-    { 
-      label: isAr ? '02. التشخيص' : '02. DIAGNOSTIC', 
+      label: isAr ? '01. مركز التشخيص' : '01. DIAGNOSTIC HUB', 
       id: SectionId.PHASE_01_SCAN, 
       type: 'scroll' 
     },
     { 
-      label: isAr ? '03. التخليق' : '03. SYNTHESIS', 
+      label: isAr ? '02. التخليق' : '02. SYNTHESIS', 
       id: SectionId.PHASE_03_SYNTHESIS, 
       type: 'scroll' 
     },
     { 
-      label: isAr ? '04. السجل' : '04. LEDGER', 
+      label: isAr ? '03. السجل' : '03. LEDGER', 
       id: 'vaults', 
       type: 'view' 
     },
