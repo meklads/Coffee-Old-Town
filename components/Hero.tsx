@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Microscope, Fingerprint, CheckCircle2, RotateCcw, Database, Sparkles, Flame, Activity, AlertTriangle, RefreshCcw, Baby, HeartPulse, Zap, Settings2, ShieldCheck, Binary } from 'lucide-react';
+// Added missing Sparkles and ChevronRight to the lucide-react import list
+import { Plus, Microscope, Fingerprint, CheckCircle2, RotateCcw, Flame, Activity, AlertTriangle, RefreshCcw, Baby, HeartPulse, Zap, Settings2, ShieldCheck, Binary, Share2, BookOpen, ExternalLink, Droplets, Info, Sparkles, ChevronRight } from 'lucide-react';
 import { SectionId, BioPersona } from '../types.ts';
 import { useApp } from '../context/AppContext.tsx';
 import { analyzeMealImage } from '../services/geminiService.ts';
@@ -35,7 +36,6 @@ const Hero: React.FC = () => {
     if (id === currentPersona) return;
     setIsCalibrating(true);
     setCurrentPersona(id);
-    // Visual feedback for "Loading Protocol"
     setTimeout(() => setIsCalibrating(false), 800);
   };
 
@@ -86,31 +86,57 @@ const Hero: React.FC = () => {
     setLastAnalysisResult(null);
   };
 
-  const personaConfigs = [
-    { id: 'GENERAL' as BioPersona, icon: <Fingerprint size={18} />, label: isAr ? 'عام' : 'GENERAL', color: 'brand-primary' },
-    { id: 'PREGNANCY' as BioPersona, icon: <Baby size={18} />, label: isAr ? 'حمل' : 'PREGNANCY', color: 'rose-400' },
-    { id: 'DIABETIC' as BioPersona, icon: <HeartPulse size={18} />, label: isAr ? 'سكري' : 'DIABETIC', color: 'emerald-400' },
-    { id: 'ATHLETE' as BioPersona, icon: <Zap size={18} />, label: isAr ? 'رياضي' : 'ATHLETE', color: 'blue-400' },
-  ];
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'Bio-Analysis Report | Old Town Lab',
+        text: `Check out my metabolic analysis: ${lastAnalysisResult?.summary} with ${lastAnalysisResult?.totalCalories} kcal.`,
+        url: window.location.href,
+      }).catch(() => {});
+    } else {
+      alert(isAr ? 'تم نسخ الرابط للمشاركة' : 'Link copied to clipboard');
+    }
+  };
 
-  const currentConfig = personaConfigs.find(c => c.id === currentPersona);
+  const getWarningIcon = (type: string) => {
+    switch (type) {
+      case 'sugar': return <Droplets size={14} className="text-orange-400" />;
+      case 'pregnancy': return <Baby size={14} className="text-rose-400" />;
+      case 'allergy': return <AlertTriangle size={14} className="text-red-400" />;
+      case 'sodium': return <Activity size={14} className="text-amber-400" />;
+      default: return <Info size={14} className="text-blue-400" />;
+    }
+  };
+
+  const getRiskColor = (level: string) => {
+    switch (level) {
+      case 'high': return 'bg-red-500/10 text-red-500 border-red-500/20';
+      case 'medium': return 'bg-orange-500/10 text-orange-500 border-orange-500/20';
+      case 'low': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+      default: return 'bg-white/5 text-white/40 border-white/10';
+    }
+  };
+
+  const personaConfigs = [
+    { id: 'GENERAL' as BioPersona, icon: <Fingerprint size={18} />, label: isAr ? 'عام' : 'GENERAL' },
+    { id: 'PREGNANCY' as BioPersona, icon: <Baby size={18} />, label: isAr ? 'حمل' : 'PREGNANCY' },
+    { id: 'DIABETIC' as BioPersona, icon: <HeartPulse size={18} />, label: isAr ? 'سكري' : 'DIABETIC' },
+    { id: 'ATHLETE' as BioPersona, icon: <Zap size={18} />, label: isAr ? 'رياضي' : 'ATHLETE' },
+  ];
 
   return (
     <section id={SectionId.PHASE_01_SCAN} className="relative min-h-screen bg-brand-light dark:bg-brand-dark flex items-center overflow-hidden pt-32 pb-20 transition-colors duration-1000">
-      
-      {/* Bio-Bridge Background Elements */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.02] z-0" 
            style={{ backgroundImage: 'radial-gradient(#C2A36B 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
       
       <div className="max-w-7xl w-full mx-auto px-6 z-10">
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-24 items-center">
           
-          {/* Left Panel: Persona Controls & Status */}
           <div className="lg:col-span-5 space-y-12 text-center lg:text-left">
             <div className="space-y-6">
               <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-white dark:bg-white/5 border border-brand-dark/[0.05] dark:border-white/5 rounded-full shadow-sm mx-auto lg:mx-0">
                 <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${isCalibrating ? 'bg-brand-primary' : 'bg-emerald-500'}`} />
-                <span className="text-[8px] font-black uppercase tracking-[0.5em] text-brand-dark/40 dark:text-white/40 italic">
+                <span className="text-[8px] font-black uppercase tracking-[0.5em] text-brand-dark/40 dark:text-white/40 italic uppercase">
                   {isCalibrating ? 'CALIBRATING_NODE...' : 'SYSTEM_STABLE'}
                 </span>
               </div>
@@ -122,7 +148,6 @@ const Hero: React.FC = () => {
               </p>
             </div>
 
-            {/* Persona Selection Sidebar Integrated */}
             <div className="space-y-6 relative">
                <div className="flex items-center gap-4 mb-2">
                   <Settings2 size={14} className="text-brand-primary animate-spin-slow" />
@@ -150,7 +175,6 @@ const Hero: React.FC = () => {
                </div>
             </div>
 
-            {/* Diagnostic Stats */}
             <div className="flex flex-wrap justify-center lg:justify-start gap-8 pt-6 opacity-30">
                <div className="flex items-center gap-3">
                   <Binary size={14} className="text-brand-primary" />
@@ -163,19 +187,16 @@ const Hero: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Panel: The Bio-Scanner Chamber */}
           <div className="lg:col-span-7 flex justify-center items-center">
             <div 
                className="relative w-full max-w-[460px] transition-transform duration-1000"
                style={{ transform: window.innerWidth > 1024 ? `translate(${mousePos.x}px, ${mousePos.y}px)` : 'none' }}
              >
-               {/* Aesthetic Glow Ring */}
                <div className="absolute -inset-10 border border-brand-primary/5 rounded-full animate-[spin_20s_linear_infinite] pointer-events-none" />
                <div className="absolute -inset-20 border border-brand-primary/5 rounded-full animate-[spin_30s_linear_infinite] pointer-events-none" style={{ animationDirection: 'reverse' }} />
 
                <div className="relative aspect-[3/4] rounded-[70px] border-4 border-white dark:border-zinc-900 bg-white dark:bg-zinc-900/60 overflow-hidden shadow-4xl z-20 group">
                   
-                  {/* Calibrating Pulse */}
                   {isCalibrating && (
                     <div className="absolute inset-0 z-[60] bg-brand-primary/10 backdrop-blur-[2px] flex items-center justify-center animate-fade-in">
                        <div className="w-32 h-32 rounded-full border-4 border-brand-primary animate-ping opacity-20" />
@@ -203,54 +224,87 @@ const Hero: React.FC = () => {
                       )}
 
                       {status === 'success' && lastAnalysisResult && (
-                        <div className="absolute inset-0 bg-brand-dark/95 backdrop-blur-xl flex flex-col p-10 z-50 animate-fade-in text-white overflow-y-auto custom-scrollbar">
-                           <div className="flex justify-between items-start mb-8 shrink-0">
-                              <div className="bg-brand-primary/20 p-2.5 rounded-2xl border border-brand-primary/30 text-brand-primary flex items-center gap-2">
-                                <CheckCircle2 size={16} />
-                                <span className="text-[8px] font-black uppercase tracking-widest">{currentPersona}_VALIDATED</span>
+                        <div className="absolute inset-0 bg-brand-dark/95 backdrop-blur-xl flex flex-col p-8 z-50 animate-fade-in text-white overflow-y-auto custom-scrollbar">
+                           <div className="flex justify-between items-start mb-6 shrink-0">
+                              <div className="bg-brand-primary/20 p-2 rounded-2xl border border-brand-primary/30 text-brand-primary flex items-center gap-2">
+                                <CheckCircle2 size={14} />
+                                <span className="text-[7px] font-black uppercase tracking-widest">{currentPersona}_OK</span>
                               </div>
-                              <button onClick={resetScanner} className="p-2 text-white/20 hover:text-white transition-colors"><RotateCcw size={18} /></button>
+                              <div className="flex items-center gap-2">
+                                <button onClick={handleShare} className="p-2 text-white/20 hover:text-white transition-colors"><Share2 size={16} /></button>
+                                <button onClick={resetScanner} className="p-2 text-white/20 hover:text-white transition-colors"><RotateCcw size={16} /></button>
+                              </div>
                            </div>
 
-                           <div className="space-y-8 flex-grow">
-                              <div className="space-y-2">
-                                 <span className="text-[7px] font-black text-brand-primary uppercase tracking-[0.4em]">Specimen_ID_#2045</span>
-                                 <h3 className="text-3xl font-serif font-bold leading-tight">{lastAnalysisResult.summary}</h3>
+                           <div className="space-y-6 flex-grow pb-10">
+                              <div className="space-y-1">
+                                 <span className="text-[6px] font-black text-brand-primary uppercase tracking-[0.4em]">Specimen_ID_#2045</span>
+                                 <h3 className="text-2xl font-serif font-bold leading-tight">{lastAnalysisResult.summary}</h3>
                               </div>
 
+                              {/* Warning System with Icons and Risk Levels */}
                               {lastAnalysisResult.warnings && lastAnalysisResult.warnings.length > 0 && (
-                                <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-3xl space-y-3">
-                                   <div className="flex items-center gap-2 text-red-400">
-                                      <AlertTriangle size={14} />
-                                      <span className="text-[8px] font-black uppercase tracking-widest">CONTRAINDICATION_ALERT</span>
+                                <div className="space-y-3">
+                                   <div className="flex items-center gap-2 text-white/40">
+                                      <AlertTriangle size={12} />
+                                      <span className="text-[7px] font-black uppercase tracking-widest">BIOMETRIC_ALERTS</span>
                                    </div>
-                                   {lastAnalysisResult.warnings.map((w, i) => (
-                                     <p key={i} className="text-[11px] text-white/80 font-medium italic leading-relaxed">• {w}</p>
+                                   {lastAnalysisResult.warnings.map((w: any, i: number) => (
+                                     <div key={i} className={`p-4 rounded-3xl border flex items-center gap-4 transition-all hover:scale-[1.02] ${getRiskColor(w.riskLevel)}`}>
+                                        <div className="shrink-0">{getWarningIcon(w.type)}</div>
+                                        <div className="flex-grow">
+                                           <p className="text-[10px] font-bold italic leading-tight">{w.text}</p>
+                                        </div>
+                                        <div className="shrink-0 text-[6px] font-black uppercase tracking-widest opacity-60">
+                                          {w.riskLevel}_risk
+                                        </div>
+                                     </div>
                                    ))}
                                 </div>
                               )}
 
                               <div className="grid grid-cols-2 gap-4">
-                                 <div className="bg-white/5 p-5 rounded-3xl border border-white/5">
-                                    <div className="flex items-center gap-2 opacity-30 mb-2"><Flame size={12} /><span className="text-[7px] font-black uppercase">Energy</span></div>
-                                    <p className="text-2xl font-serif font-bold">{lastAnalysisResult.totalCalories}<span className="text-[10px] ml-1 opacity-40">kcal</span></p>
+                                 <div className="bg-white/5 p-4 rounded-3xl border border-white/5">
+                                    <div className="flex items-center gap-2 opacity-30 mb-1"><Flame size={10} /><span className="text-[6px] font-black uppercase tracking-widest">Energy</span></div>
+                                    <p className="text-xl font-serif font-bold">{lastAnalysisResult.totalCalories}<span className="text-[8px] ml-1 opacity-40">kcal</span></p>
                                  </div>
-                                 <div className="bg-white/5 p-5 rounded-3xl border border-white/5">
-                                    <div className="flex items-center gap-2 opacity-30 mb-2"><Activity size={12} /><span className="text-[7px] font-black uppercase">Health %</span></div>
-                                    <p className="text-2xl font-serif font-bold text-brand-primary">{lastAnalysisResult.healthScore}%</p>
+                                 <div className="bg-white/5 p-4 rounded-3xl border border-white/5">
+                                    <div className="flex items-center gap-2 opacity-30 mb-1"><Activity size={10} /><span className="text-[6px] font-black uppercase tracking-widest">Vitality</span></div>
+                                    <p className="text-xl font-serif font-bold text-brand-primary">{lastAnalysisResult.healthScore}%</p>
                                  </div>
                               </div>
 
-                              <div className="bg-brand-primary/10 border-l-4 border-brand-primary p-6 rounded-r-3xl">
-                                 <p className="text-[12px] text-white/80 italic leading-relaxed">"{lastAnalysisResult.personalizedAdvice}"</p>
+                              {/* Advice as Bullet Points */}
+                              <div className="bg-brand-primary/10 border-l-4 border-brand-primary p-5 rounded-r-3xl space-y-3">
+                                 <div className="flex items-center gap-2 text-brand-primary opacity-60 mb-2">
+                                    <Sparkles size={12} />
+                                    <span className="text-[7px] font-black uppercase tracking-widest">PROTOCOL_ADVICE</span>
+                                 </div>
+                                 <ul className="space-y-2">
+                                    {(Array.isArray(lastAnalysisResult.personalizedAdvice) ? lastAnalysisResult.personalizedAdvice : [lastAnalysisResult.personalizedAdvice]).map((adv: string, i: number) => (
+                                      <li key={i} className="text-[11px] text-white/90 italic leading-relaxed flex items-start gap-2">
+                                        <span className="text-brand-primary mt-1">•</span>
+                                        {adv}
+                                      </li>
+                                    ))}
+                                 </ul>
                               </div>
+
+                              {/* Scientific Source Reference */}
+                              {lastAnalysisResult.scientificSource && (
+                                <div className="flex items-center gap-3 pt-4 opacity-20 hover:opacity-100 transition-opacity">
+                                   <BookOpen size={10} className="text-brand-primary" />
+                                   <span className="text-[7px] font-black uppercase tracking-widest">{lastAnalysisResult.scientificSource}</span>
+                                </div>
+                              )}
                            </div>
 
-                           <button onClick={() => scrollTo(SectionId.PHASE_03_SYNTHESIS)} className="w-full mt-10 py-6 bg-brand-primary text-brand-dark rounded-3xl text-[10px] font-black uppercase tracking-[0.4em] shadow-glow shrink-0 transition-transform active:scale-95">View Bio-Blueprint</button>
+                           <button onClick={() => scrollTo(SectionId.PHASE_03_SYNTHESIS)} className="w-full mt-4 py-5 bg-brand-primary text-brand-dark rounded-3xl text-[9px] font-black uppercase tracking-[0.4em] shadow-glow shrink-0 transition-transform active:scale-95 flex items-center justify-center gap-3">
+                              Full Protocol Blueprint <ChevronRight size={14} />
+                           </button>
                         </div>
                       )}
 
-                      {/* Recalibration Logic Overlay */}
                       {status !== 'loading' && !lastAnalysisResult && (
                         <div className="absolute inset-0 bg-brand-dark/80 backdrop-blur-[6px] flex flex-col items-center justify-center p-10 text-center animate-fade-in text-white z-40">
                            <RefreshCcw size={48} className="text-brand-primary mb-6 animate-spin-slow opacity-60" />
@@ -291,7 +345,6 @@ const Hero: React.FC = () => {
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
                </div>
 
-               {/* Bio-Scanner Footnotes */}
                <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-8 whitespace-nowrap opacity-40">
                   <div className="flex items-center gap-3">
                     <Microscope size={12} className="text-brand-primary" />

@@ -36,11 +36,33 @@ const mealAnalysisSchema = {
       required: ["protein", "carbs", "fat"]
     },
     summary: { type: Type.STRING },
-    personalizedAdvice: { type: Type.STRING },
-    warnings: {
+    personalizedAdvice: {
       type: Type.ARRAY,
       items: { type: Type.STRING },
-      description: "Critical warnings specific to the user persona (e.g., high sugar for diabetics, mercury for pregnancy)."
+      description: "List of concise, bullet-point advice based on the analysis."
+    },
+    warnings: {
+      type: Type.ARRAY,
+      items: { 
+        type: Type.OBJECT,
+        properties: {
+          text: { type: Type.STRING },
+          riskLevel: { 
+            type: Type.STRING, 
+            description: "One of: 'low', 'medium', 'high'" 
+          },
+          type: {
+            type: Type.STRING,
+            description: "Category: 'sugar', 'sodium', 'pregnancy', 'allergy', 'general'"
+          }
+        },
+        required: ["text", "riskLevel", "type"]
+      },
+      description: "Critical warnings specific to the user persona."
+    },
+    scientificSource: {
+      type: Type.STRING,
+      description: "A mention of a general scientific guideline (e.g., 'Based on WHO guidelines' or 'AHA standards')."
     }
   },
   required: ["ingredients", "totalCalories", "healthScore", "macros", "summary", "personalizedAdvice", "warnings"]
@@ -81,7 +103,8 @@ export default async function handler(req: any, res: any) {
         parts: [
           { inlineData: { data: base64Data, mimeType: 'image/jpeg' } },
           { text: `Deep clinical analysis. User Path: ${persona}. ${personaContext}
-                  Return JSON conforming to schema. Include specific 'warnings' array for this persona.` }
+                  Return JSON conforming to schema. Provide 'personalizedAdvice' as an array of short strings.
+                  Categorize each warning and assign a 'riskLevel' (low, medium, high).` }
         ]
       },
       config: { 
