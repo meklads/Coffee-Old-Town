@@ -1,6 +1,5 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-// Added missing Sparkles and ChevronRight to the lucide-react import list
 import { Plus, Microscope, Fingerprint, CheckCircle2, RotateCcw, Flame, Activity, AlertTriangle, RefreshCcw, Baby, HeartPulse, Zap, Settings2, ShieldCheck, Binary, Share2, BookOpen, ExternalLink, Droplets, Info, Sparkles, ChevronRight } from 'lucide-react';
 import { SectionId, BioPersona } from '../types.ts';
 import { useApp } from '../context/AppContext.tsx';
@@ -17,6 +16,7 @@ const Hero: React.FC = () => {
   
   const isAr = language === 'ar';
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const scannerRef = useRef<HTMLDivElement>(null);
   const progressIntervalRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -34,8 +34,17 @@ const Hero: React.FC = () => {
 
   const handlePersonaSelect = (id: BioPersona) => {
     if (id === currentPersona) return;
+    
     setIsCalibrating(true);
     setCurrentPersona(id);
+    
+    // Auto-scroll logic for mobile/tablet users
+    if (window.innerWidth < 1024 && scannerRef.current) {
+      setTimeout(() => {
+        scannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+    
     setTimeout(() => setIsCalibrating(false), 800);
   };
 
@@ -189,6 +198,7 @@ const Hero: React.FC = () => {
 
           <div className="lg:col-span-7 flex justify-center items-center">
             <div 
+               ref={scannerRef}
                className="relative w-full max-w-[460px] transition-transform duration-1000"
                style={{ transform: window.innerWidth > 1024 ? `translate(${mousePos.x}px, ${mousePos.y}px)` : 'none' }}
              >
@@ -242,7 +252,6 @@ const Hero: React.FC = () => {
                                  <h3 className="text-2xl font-serif font-bold leading-tight">{lastAnalysisResult.summary}</h3>
                               </div>
 
-                              {/* Warning System with Icons and Risk Levels */}
                               {lastAnalysisResult.warnings && lastAnalysisResult.warnings.length > 0 && (
                                 <div className="space-y-3">
                                    <div className="flex items-center gap-2 text-white/40">
@@ -274,7 +283,6 @@ const Hero: React.FC = () => {
                                  </div>
                               </div>
 
-                              {/* Advice as Bullet Points */}
                               <div className="bg-brand-primary/10 border-l-4 border-brand-primary p-5 rounded-r-3xl space-y-3">
                                  <div className="flex items-center gap-2 text-brand-primary opacity-60 mb-2">
                                     <Sparkles size={12} />
@@ -290,7 +298,6 @@ const Hero: React.FC = () => {
                                  </ul>
                               </div>
 
-                              {/* Scientific Source Reference */}
                               {lastAnalysisResult.scientificSource && (
                                 <div className="flex items-center gap-3 pt-4 opacity-20 hover:opacity-100 transition-opacity">
                                    <BookOpen size={10} className="text-brand-primary" />
