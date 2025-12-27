@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { RotateCcw, Baby, HeartPulse, Zap, Camera, Utensils, Share2, Activity, Sparkles, AlertCircle, RefreshCw, UploadCloud, FileSearch, Check, Copy, Clock, Key, ExternalLink, Loader2 } from 'lucide-react';
+import { RotateCcw, Baby, HeartPulse, Zap, Camera, Utensils, Share2, Activity, Sparkles, AlertCircle, RefreshCw, UploadCloud, FileSearch, Check, Copy, Clock, Key, ExternalLink, Loader2, Info } from 'lucide-react';
 import { SectionId, BioPersona } from '../types.ts';
 import { useApp } from '../context/AppContext.tsx';
 import { analyzeMealImage } from '../services/geminiService.ts';
@@ -15,7 +15,7 @@ const Hero: React.FC = () => {
   
   const [progress, setProgress] = useState(0);
   const [loadingStep, setLoadingStep] = useState('');
-  const [errorMsg, setErrorMsg] = useState<{title: string, detail: string, type?: 'quota' | 'general'} | null>(null);
+  const [errorMsg, setErrorMsg] = useState<{title: string, detail: string, type?: 'quota' | 'general' | 'info'} | null>(null);
   const [shareStatus, setShareStatus] = useState<'idle' | 'shared' | 'error'>('idle');
   const [isConnectingKey, setIsConnectingKey] = useState(false);
   
@@ -83,21 +83,21 @@ const Hero: React.FC = () => {
     if (aistudio && typeof aistudio.openSelectKey === 'function') {
       try {
         setIsConnectingKey(true);
-        // فتح حوار اختيار المفتاح
         await aistudio.openSelectKey();
-        // نفترض النجاح فوراً حسب التعليمات لتفادي race condition
-        setTimeout(() => {
-          handleReset();
-        }, 500);
+        setTimeout(() => handleReset(), 500);
       } catch (e) {
         console.error("Key selection failed", e);
         setIsConnectingKey(false);
       }
     } else {
-      // تنبيه في حال عدم التواجد في بيئة AI Studio
-      alert(isAr 
-        ? "عذراً، يجب استخدام هذه الميزة داخل منصة AI Studio الرسمية." 
-        : "This feature must be used within the official AI Studio platform.");
+      // بدلاً من الـ alert، نقوم بتحديث رسالة الخطأ لتشرح الوضع للمستخدم
+      setErrorMsg({
+        title: isAr ? "نظام المفاتيح الشخصية" : "Personal Key System",
+        detail: isAr 
+          ? "ميزة ربط المفاتيح تعمل حصرياً داخل بيئة AI Studio. لتجاوز الحد على هذا الرابط، يرجى المحاولة لاحقاً أو مراجعة إعدادات الموقع."
+          : "Key linking only works within the AI Studio environment. To bypass the limit here, please try again later or contact the administrator.",
+        type: 'info'
+      });
     }
   };
 
@@ -164,8 +164,8 @@ const Hero: React.FC = () => {
         setErrorMsg({
           title: isAr ? "تحجيم الأداء الأيضي" : "Metabolic Throttling",
           detail: isAr 
-            ? "لقد استنفذ المختبر حصته العامة المجانية لهذا اليوم. للبدء فوراً، يرجى ربط مفتاح API الشخصي الخاص بك."
-            : "The shared free lab quota has been reached. To continue immediately, please connect your personal API key.",
+            ? "وصل المختبر العام للحد الأقصى اليومي من الطلبات المجانية. الميزة مقيدة حالياً للحفاظ على استقرار النظام."
+            : "The shared lab reached its daily free request limit. Features are temporarily throttled for system stability.",
           type: 'quota'
         });
       } else {
@@ -325,38 +325,40 @@ const Hero: React.FC = () => {
                       </div>
                     ) : status === 'error' && errorMsg ? (
                       <div className="h-full flex flex-col items-center justify-center p-6 lg:p-10 text-center space-y-8 animate-fade-in">
-                         {errorMsg.type === 'quota' ? <Clock size={40} className="text-brand-primary animate-pulse" /> : <AlertCircle size={40} className="text-red-500" />}
+                         {errorMsg.type === 'quota' ? <Clock size={40} className="text-brand-primary animate-pulse" /> : errorMsg.type === 'info' ? <Info size={40} className="text-brand-primary" /> : <AlertCircle size={40} className="text-red-500" />}
                          <div className="space-y-4">
-                            <h4 className={`text-2xl lg:text-3xl font-serif font-bold italic ${errorMsg.type === 'quota' ? 'text-brand-primary' : 'text-red-500'}`}>{errorMsg.title}</h4>
+                            <h4 className={`text-2xl lg:text-3xl font-serif font-bold italic ${errorMsg.type === 'general' ? 'text-red-500' : 'text-brand-primary'}`}>{errorMsg.title}</h4>
                             <p className="text-white/40 text-[10px] uppercase tracking-widest px-4 leading-relaxed">{errorMsg.detail}</p>
                          </div>
                          
                          <div className="flex flex-col gap-3 w-full">
-                            {errorMsg.type === 'quota' && (
+                            {(errorMsg.type === 'quota' || errorMsg.type === 'info') ? (
                               <button 
                                 onClick={handleConnectPersonalKey} 
                                 disabled={isConnectingKey}
                                 className="w-full py-5 bg-brand-primary text-brand-dark rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] shadow-glow flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-70"
                               >
                                  {isConnectingKey ? <Loader2 size={14} className="animate-spin" /> : <Key size={14} />} 
-                                 {isAr ? 'استخدام مفتاحك الشخصي (فوري)' : 'USE PERSONAL KEY (INSTANT)'}
+                                 {isAr ? 'حاول مجدداً أو اربط مفتاحك' : 'RETRY OR CONNECT KEY'}
                               </button>
-                            )}
-                            <button onClick={handleReset} className={`w-full py-5 bg-white/5 text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.4em] border transition-all hover:bg-white/10 ${errorMsg.type === 'quota' ? 'border-brand-primary/20' : 'border-white/10'}`}>
-                               {isAr ? 'إلغاء وإعادة المحاولة' : 'CANCEL & RETRY'}
+                            ) : null}
+                            <button onClick={handleReset} className={`w-full py-5 bg-white/5 text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.4em] border transition-all hover:bg-white/10 ${errorMsg.type === 'general' ? 'border-red-500/20' : 'border-brand-primary/20'}`}>
+                               {isAr ? 'إلغاء والعودة' : 'CANCEL & GO BACK'}
                             </button>
                          </div>
                          
-                         {errorMsg.type === 'quota' && (
-                           <a 
-                             href="https://ai.google.dev/gemini-api/docs/rate-limits" 
-                             target="_blank" 
-                             rel="noopener noreferrer"
-                             className="flex items-center gap-2 text-[8px] text-white/20 uppercase tracking-widest font-medium hover:text-brand-primary transition-colors"
-                           >
-                             <ExternalLink size={10} />
-                             {isAr ? 'احصل على مفتاح مجاني من Google AI Studio' : 'Get free key from Google AI Studio'}
-                           </a>
+                         {(errorMsg.type === 'quota' || errorMsg.type === 'info') && (
+                           <div className="flex flex-col items-center gap-3">
+                              <a 
+                                href="https://ai.google.dev/gemini-api/docs/billing" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 text-[8px] text-white/20 uppercase tracking-widest font-medium hover:text-brand-primary transition-colors"
+                              >
+                                <ExternalLink size={10} />
+                                {isAr ? 'تعرف على حصص Gemini API والفوترة' : 'Learn about Gemini API Quotas & Billing'}
+                              </a>
+                           </div>
                          )}
                       </div>
                     ) : status === 'success' && lastAnalysisResult ? (
