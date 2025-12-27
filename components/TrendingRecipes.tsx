@@ -52,7 +52,7 @@ const TrendingRecipes: React.FC = () => {
                  <Globe size={12} className="animate-spin-slow" />
                  <span>GLOBAL SYNCHRONIZATION</span>
               </div>
-              <h2 className="text-5xl md:text-7xl font-serif font-bold text-brand-dark dark:text-white leading-[0.8] tracking-tighter">
+              <h2 className="text-5xl md:text-7xl font-serif font-bold text-brand-dark dark:text-white leading-none tracking-tighter whitespace-nowrap">
                 Trending <span className="text-brand-primary italic font-normal">Systems.</span>
               </h2>
            </div>

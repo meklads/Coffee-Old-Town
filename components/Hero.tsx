@@ -22,37 +22,38 @@ const Hero: React.FC = () => {
     { 
       id: 'GENERAL' as BioPersona, 
       label: isAr ? 'عام' : 'GENERAL', 
-      slogan: isAr ? 'امسح وجبتك اليومية المعتادة' : 'Scan your daily regular meals',
+      slogan: isAr ? 'سكان وجبتك المعتادة' : 'Scan your daily meal',
       icon: <Utensils size={14} />
     },
     { 
       id: 'PREGNANCY' as BioPersona, 
       label: isAr ? 'حمل' : 'PREGNANCY', 
-      slogan: isAr ? 'امسحي طعامك لسلامة الجنين' : 'Scan safe prenatal nutrients',
+      slogan: isAr ? 'سكان طعام الجنين' : 'Scan prenatal fuel',
       icon: <Baby size={14} />
     },
     { 
       id: 'DIABETIC' as BioPersona, 
       label: isAr ? 'سكري' : 'DIABETIC', 
-      slogan: isAr ? 'راقب السكر والكربوهيدرات الآن' : 'Scan for glucose stability',
+      slogan: isAr ? 'سكان توازن السكر' : 'Scan for glucose',
       icon: <HeartPulse size={14} />
     },
     { 
       id: 'ATHLETE' as BioPersona, 
       label: isAr ? 'رياضي' : 'ATHLETE', 
-      slogan: isAr ? 'امسح بروتين الاستشفاء والأداء' : 'Scan high-performance fuel',
+      slogan: isAr ? 'سكان أداء العضلات' : 'Scan protein intake',
       icon: <Zap size={14} />
     }
   ];
 
   const handlePersonaSelect = (id: BioPersona) => {
     setCurrentPersona(id);
+    // إخفاء أي نتائج سابقة عند تغيير البروتوكول لبدء تجربة جديدة
     setStatus('idle');
     setErrorMessage('');
     
-    // التمرير التلقائي للماسح الضوئي عند اختيار البروتوكول
+    // تمرير ذكي ليملأ السكانر الشاشة في الجوال
     if (scannerRef.current) {
-      const offset = 100;
+      const offset = 70; // مسافة بسيطة من الأعلى لإظهار بداية السكانر
       const elementPosition = scannerRef.current.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - offset;
       window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
@@ -140,9 +141,9 @@ const Hero: React.FC = () => {
   return (
     <section id={SectionId.PHASE_01_SCAN} className="relative min-h-screen bg-brand-light dark:bg-brand-dark pt-32 pb-20 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-16 items-start">
           
-          <div className="space-y-12">
+          <div className="space-y-12 w-full">
             <div className="space-y-6">
               <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-brand-primary/10 rounded-full">
                 <div className="w-2 h-2 rounded-full bg-brand-primary animate-pulse" />
@@ -152,29 +153,30 @@ const Hero: React.FC = () => {
                 Precision <br /><span className="text-brand-primary italic font-normal">Command.</span>
               </h1>
               <p className="text-brand-dark/50 dark:text-white/30 text-lg italic max-w-md">
-                {isAr ? 'اختر بروتوكولك الصحي المناسب لنبدأ مسح طعامك الآن.' : 'Select your health protocol to start scanning your meal.'}
+                {isAr ? 'اختر نظامك المخصص لتفعيل الرؤية الحاسوبية.' : 'Select your protocol to activate computer vision.'}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
+            {/* الأزرار بنظام 2x2 على الجوال */}
+            <div className="grid grid-cols-2 gap-3 md:gap-4 max-w-lg">
               {personaData.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => handlePersonaSelect(p.id)}
-                  className={`group p-6 rounded-[32px] border transition-all duration-500 text-left relative overflow-hidden flex flex-col justify-between h-[130px]
+                  className={`group p-5 md:p-6 rounded-[32px] border transition-all duration-500 text-left relative overflow-hidden flex flex-col justify-between h-[110px] md:h-[130px]
                     ${currentPersona === p.id 
-                      ? 'bg-brand-primary border-brand-primary text-white shadow-xl scale-[1.02]' 
-                      : 'bg-white dark:bg-white/5 border-brand-dark/10 dark:border-white/10 text-brand-dark dark:text-white/60 hover:border-brand-primary/40 hover:bg-brand-primary/5 active:scale-95'}`}
+                      ? 'bg-brand-primary border-brand-primary text-white shadow-2xl scale-[1.05] z-10' 
+                      : 'bg-white dark:bg-white/5 border-brand-dark/10 dark:border-white/10 text-brand-dark dark:text-white/60 hover:border-brand-primary hover:bg-brand-primary/5 active:scale-95'}`}
                 >
                   <div className="flex justify-between items-start">
-                     <span className={`text-[9px] font-black uppercase tracking-widest block opacity-60 ${currentPersona === p.id ? 'text-white' : 'text-brand-primary'}`}>PROTOCOL</span>
-                     <div className={`transition-all duration-500 ${currentPersona === p.id ? 'scale-110' : 'group-hover:scale-110 opacity-40'}`}>
+                     <span className={`text-[8px] font-black uppercase tracking-widest block opacity-50 ${currentPersona === p.id ? 'text-white' : 'text-brand-primary'}`}>NODE</span>
+                     <div className={`transition-all duration-500 ${currentPersona === p.id ? 'scale-110' : 'group-hover:scale-110 opacity-30 group-hover:opacity-100 group-hover:text-brand-primary'}`}>
                         {p.icon}
                      </div>
                   </div>
-                  <div>
+                  <div className="mt-auto">
                     <span className="text-sm font-bold block mb-1">{p.label}</span>
-                    <span className={`text-[10px] italic font-medium block leading-tight transition-colors ${currentPersona === p.id ? 'text-white/80' : 'text-brand-dark/40 dark:text-white/30'}`}>
+                    <span className={`text-[9px] italic font-medium block leading-tight transition-colors ${currentPersona === p.id ? 'text-white/80' : 'text-brand-dark/30 dark:text-white/30'}`}>
                       {p.slogan}
                     </span>
                   </div>
@@ -183,14 +185,15 @@ const Hero: React.FC = () => {
             </div>
           </div>
 
-          <div ref={scannerRef} className="flex justify-center scroll-mt-32">
-            <div className="relative w-full max-w-[440px] aspect-[3/4] rounded-[60px] bg-white dark:bg-zinc-900 border-4 border-white dark:border-zinc-800 shadow-4xl overflow-hidden group">
+          {/* وحدة السكانر - تملأ العرض في الجوال */}
+          <div ref={scannerRef} className="flex justify-center scroll-mt-24 w-full">
+            <div className="relative w-full max-w-[480px] aspect-[3/4] rounded-[50px] md:rounded-[60px] bg-white dark:bg-zinc-900 border-4 border-white dark:border-zinc-800 shadow-4xl overflow-hidden group">
               {!image ? (
                 <div 
                   onClick={() => fileInputRef.current?.click()}
                   className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer p-10 transition-colors hover:bg-brand-primary/5"
                 >
-                  <div className="w-24 h-24 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary mb-8 animate-pulse shadow-glow">
+                  <div className="w-20 h-20 md:w-24 md:h-24 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary mb-8 animate-pulse shadow-glow">
                     <Camera size={40} />
                   </div>
                   <h4 className="text-2xl font-serif font-bold italic text-brand-dark/40 dark:text-white/20 mb-2">

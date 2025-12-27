@@ -41,7 +41,7 @@ const Categories: React.FC = () => {
                   <Sparkles size={12} className="animate-spin-slow" />
                   <span>KNOWLEDGE HUB</span>
                </div>
-               <h2 className="text-6xl md:text-8xl font-serif font-bold text-brand-dark dark:text-white tracking-tighter leading-none">
+               <h2 className="text-5xl md:text-8xl font-serif font-bold text-brand-dark dark:text-white tracking-tighter leading-none whitespace-nowrap">
                  Learn & <span className="text-brand-primary italic font-normal">Upgrade.</span>
                </h2>
             </div>
