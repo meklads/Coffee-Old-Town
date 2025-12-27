@@ -90,11 +90,17 @@ export default async function handler(req: any, res: any) {
   } catch (error: any) {
     console.error("Vercel Serverless Error:", error);
     
-    // إذا كان الخطأ بسبب الحصة (Quota)
-    if (error.status === 429 || (error.message && error.message.includes("quota"))) {
+    const errMsg = (error.message || "").toLowerCase();
+    const isQuota = error.status === 429 || 
+                    errMsg.includes("quota") || 
+                    errMsg.includes("limit") || 
+                    errMsg.includes("exhausted") ||
+                    errMsg.includes("reached");
+
+    if (isQuota) {
       return res.status(429).json({ 
         error: 'QUOTA_EXCEEDED', 
-        details: 'You have reached the daily limit for the free AI model.' 
+        details: 'QUOTA_LIMIT: Daily usage limit reached. Please connect a personal API key.' 
       });
     }
 

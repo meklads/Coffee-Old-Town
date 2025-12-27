@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { RotateCcw, Baby, HeartPulse, Zap, Camera, Utensils, Share2, Activity, Sparkles, AlertCircle, RefreshCw, UploadCloud, FileSearch, Check, Copy, Clock } from 'lucide-react';
+import { RotateCcw, Baby, HeartPulse, Zap, Camera, Utensils, Share2, Activity, Sparkles, AlertCircle, RefreshCw, UploadCloud, FileSearch, Check, Copy, Clock, Key, ExternalLink } from 'lucide-react';
 import { SectionId, BioPersona } from '../types.ts';
 import { useApp } from '../context/AppContext.tsx';
 import { analyzeMealImage } from '../services/geminiService.ts';
@@ -76,6 +76,17 @@ const Hero: React.FC = () => {
     if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
   };
 
+  const handleConnectPersonalKey = async () => {
+    if (window.aistudio) {
+      try {
+        await window.aistudio.openSelectKey();
+        handleReset();
+      } catch (e) {
+        console.error("Key selection failed", e);
+      }
+    }
+  };
+
   const handleAnalyze = async () => {
     if (!image || status === 'loading') return;
     setStatus('loading');
@@ -125,24 +136,31 @@ const Hero: React.FC = () => {
       if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
       setStatus('error');
       
-      const errorStr = err.message || "";
-      const isQuotaError = errorStr.includes("QUOTA") || errorStr.includes("429") || errorStr.includes("quota");
+      const errorStr = (err.message || "").toUpperCase();
+      // بحث فائق الشمول عن أي دلالة على نفاد الحصة أو الوصول للحد الأقصى
+      const isQuotaError = errorStr.includes("QUOTA") || 
+                           errorStr.includes("LIMIT") || 
+                           errorStr.includes("REACHED") || 
+                           errorStr.includes("DAILY") || 
+                           errorStr.includes("429") || 
+                           errorStr.includes("EXHAUSTED");
+      
       const isMissingKey = errorStr.includes("MISSING_KEY");
       
       if (isQuotaError) {
         setErrorMsg({
-          title: isAr ? "نفذت حصة الاستخدام" : "Quota Reached",
+          title: isAr ? "تحجيم الأداء الأيضي" : "Metabolic Throttling",
           detail: isAr 
-            ? "لقد وصلت للحد اليومي المسموح به للذكاء الاصطناعي (20 طلب). يرجى المحاولة مرة أخرى غداً أو استخدام مفتاح API مدفوع."
-            : "You've reached the daily AI limit (20 requests). Please try again tomorrow or use a paid API key.",
+            ? "لقد استنفذ المختبر حصته العامة المجانية لهذا اليوم. للبدء فوراً، يرجى ربط مفتاح API الشخصي الخاص بك."
+            : "The shared free lab quota has been reached. To continue immediately, please connect your personal API key.",
           type: 'quota'
         });
       } else {
         setErrorMsg({
           title: isAr ? (isMissingKey ? "خطأ في المفتاح" : "فشل التحليل") : (isMissingKey ? "API Key Issue" : "Analysis Failed"),
           detail: isAr 
-            ? (isMissingKey ? "مفتاح API غير مفعّل في إعدادات Vercel." : `عذراً، حدث خطأ أثناء المعالجة: ${err.message}`)
-            : (isMissingKey ? "API Key is not configured in Vercel settings." : `Error: ${err.message || 'Internal processing error'}`),
+            ? (isMissingKey ? "مفتاح API غير مفعّل في إعدادات السيرفر." : `خطأ في المعالجة البيومترية: ${err.message}`)
+            : (isMissingKey ? "API Key is not configured in Server settings." : `Biometric processing error: ${err.message}`),
           type: 'general'
         });
       }
@@ -293,15 +311,35 @@ const Hero: React.FC = () => {
                          <h3 className={`font-black uppercase tracking-[0.6em] animate-pulse text-[9px] lg:text-[11px] ${activeConfig.accent}`}>{loadingStep}</h3>
                       </div>
                     ) : status === 'error' && errorMsg ? (
-                      <div className="h-full flex flex-col items-center justify-center p-8 text-center space-y-10 animate-fade-in">
-                         {errorMsg.type === 'quota' ? <Clock size={44} className="text-brand-primary animate-pulse" /> : <AlertCircle size={44} className="text-red-500" />}
+                      <div className="h-full flex flex-col items-center justify-center p-6 lg:p-10 text-center space-y-8 animate-fade-in">
+                         {errorMsg.type === 'quota' ? <Clock size={40} className="text-brand-primary animate-pulse" /> : <AlertCircle size={40} className="text-red-500" />}
                          <div className="space-y-4">
-                            <h4 className={`text-3xl font-serif font-bold italic ${errorMsg.type === 'quota' ? 'text-brand-primary' : 'text-red-500'}`}>{errorMsg.title}</h4>
-                            <p className="text-white/40 text-[11px] uppercase tracking-widest px-4 leading-relaxed">{errorMsg.detail}</p>
+                            <h4 className={`text-2xl lg:text-3xl font-serif font-bold italic ${errorMsg.type === 'quota' ? 'text-brand-primary' : 'text-red-500'}`}>{errorMsg.title}</h4>
+                            <p className="text-white/40 text-[10px] uppercase tracking-widest px-4 leading-relaxed">{errorMsg.detail}</p>
                          </div>
-                         <button onClick={handleReset} className={`px-10 py-5 bg-white/5 text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.4em] border transition-all hover:bg-white/10 ${errorMsg.type === 'quota' ? 'border-brand-primary/30' : 'border-white/10'}`}>
-                            {isAr ? 'تلقيم عينة جديدة' : 'LOAD NEW SPECIMEN'}
-                         </button>
+                         
+                         <div className="flex flex-col gap-3 w-full">
+                            {errorMsg.type === 'quota' && (
+                              <button onClick={handleConnectPersonalKey} className="w-full py-5 bg-brand-primary text-brand-dark rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] shadow-glow flex items-center justify-center gap-3 active:scale-95 transition-transform">
+                                 <Key size={14} /> {isAr ? 'استخدام مفتاحك الشخصي (فوري)' : 'USE PERSONAL KEY (INSTANT)'}
+                              </button>
+                            )}
+                            <button onClick={handleReset} className={`w-full py-5 bg-white/5 text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.4em] border transition-all hover:bg-white/10 ${errorMsg.type === 'quota' ? 'border-brand-primary/20' : 'border-white/10'}`}>
+                               {isAr ? 'إلغاء وإعادة المحاولة' : 'CANCEL & RETRY'}
+                            </button>
+                         </div>
+                         
+                         {errorMsg.type === 'quota' && (
+                           <a 
+                             href="https://ai.google.dev/gemini-api/docs/rate-limits" 
+                             target="_blank" 
+                             rel="noopener noreferrer"
+                             className="flex items-center gap-2 text-[8px] text-white/20 uppercase tracking-widest font-medium hover:text-brand-primary transition-colors"
+                           >
+                             <ExternalLink size={10} />
+                             {isAr ? 'احصل على مفتاح مجاني من Google AI Studio' : 'Get free key from Google AI Studio'}
+                           </a>
+                         )}
                       </div>
                     ) : status === 'success' && lastAnalysisResult ? (
                       <div className="w-full space-y-4 lg:space-y-6 animate-fade-in h-full flex flex-col justify-center">
