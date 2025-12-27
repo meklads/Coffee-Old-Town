@@ -58,10 +58,14 @@ const Hero: React.FC = () => {
 
   const activeConfig = personaConfigs[currentPersona];
 
+  // إصلاح: إعادة تعيين السكانر بالكامل عند تغيير البروتوكول لضمان استقرار الواجهة
   useEffect(() => {
-    if (status === 'success') {
-      setStatus('idle');
-      setLastAnalysisResult(null);
+    setImage(null);
+    setStatus('idle');
+    setProgress(0);
+    setLastAnalysisResult(null);
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
     }
   }, [currentPersona]);
 
@@ -204,7 +208,7 @@ const Hero: React.FC = () => {
 
                  <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth p-4 lg:p-8 flex flex-col justify-center">
                     {status === 'idle' && !image ? (
-                      <div onClick={() => fileInputRef.current?.click()} className="h-full flex flex-col items-center justify-center text-center space-y-6 lg:space-y-8 cursor-pointer group/up py-4">
+                      <div onClick={() => fileInputRef.current?.click()} className="h-full flex flex-col items-center justify-center text-center space-y-6 lg:space-y-8 cursor-pointer group/up py-4 animate-fade-in">
                          <div className={`w-14 h-14 lg:w-20 lg:h-20 bg-white/5 border border-dashed border-white/10 rounded-full flex items-center justify-center transition-all duration-700 group-hover/up:${activeConfig.border} group-hover/up:${activeConfig.accent}`}>
                             <Camera size={24} className="lg:hidden" strokeWidth={1} />
                             <Camera size={32} className="hidden lg:block" strokeWidth={1} />
