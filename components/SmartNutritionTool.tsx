@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldPlus, Zap, Activity, Sun, CloudSun, Moon, ArrowUpRight, Sparkles, Microscope, ChevronRight, Beaker, Atom, Flame, Trophy } from 'lucide-react';
+import { ShieldPlus, Zap, Activity, Sun, CloudSun, Moon, ArrowUpRight, Sparkles, Microscope, ChevronRight, Beaker, Atom, Flame, Trophy, RefreshCw } from 'lucide-react';
 import { SectionId, DayPlan } from '../types.ts';
 import { generateMealPlan } from '../services/geminiService.ts';
 import { useApp } from '../context/AppContext.tsx';
@@ -9,7 +9,6 @@ const SmartNutritionTool: React.FC = () => {
   const { selectedGoal, setSelectedGoal, feedbackHistory, language, currentPersona } = useApp();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DayPlan | null>(null);
-  const [progress, setProgress] = useState(0);
   const chamberRef = useRef<HTMLDivElement>(null);
 
   const isAr = language === 'ar';
@@ -41,16 +40,11 @@ const SmartNutritionTool: React.FC = () => {
     }
   ];
 
+  // Reset results if persona changes globally
   useEffect(() => {
-    let interval: any;
-    if (loading) {
-      setProgress(0);
-      interval = setInterval(() => {
-        setProgress(p => (p >= 98 ? p : p + Math.floor(Math.random() * 15) + 5));
-      }, 200);
-    }
-    return () => clearInterval(interval);
-  }, [loading]);
+    setResult(null);
+    setSelectedGoal(null);
+  }, [currentPersona]);
 
   const handleGenerate = async (goalLabel: string) => {
     if (loading) return;
@@ -62,7 +56,9 @@ const SmartNutritionTool: React.FC = () => {
     setSelectedGoal(goalLabel);
     setLoading(true);
     setResult(null);
+    
     try {
+      // Ensuring the generation is context-aware of the persona
       const plan = await generateMealPlan({ 
         goal: goalLabel, 
         diet: 'balanced',
@@ -73,7 +69,7 @@ const SmartNutritionTool: React.FC = () => {
         setResult(plan);
       }
     } catch (error) {
-      console.error("Tool generation error:", error);
+      console.error("Neural Synthesis error:", error);
     } finally {
       setLoading(false);
     }
@@ -87,11 +83,15 @@ const SmartNutritionTool: React.FC = () => {
         <div className="mb-20 space-y-4">
            <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-white dark:bg-white/5 border border-brand-dark/[0.05] dark:border-white/5 text-brand-primary rounded-full shadow-sm">
               <Atom size={12} className="animate-spin-slow" />
-              <span className="text-[8px] font-black uppercase tracking-[0.5em]">{isAr ? 'وحدة التخليق العصبي' : 'NEURAL SYNTHESIS UNIT'}</span>
+              <span className="text-[8px] font-black uppercase tracking-[0.5em]">{isAr ? 'وحدة التخليق العصبي' : 'NEURAL_SYNTHESIS_UNIT'}</span>
            </div>
            <h2 className="text-5xl md:text-8xl lg:text-[105px] font-serif font-bold text-brand-dark dark:text-white tracking-tighter leading-none">
              Neural <span className="text-brand-primary italic font-normal">Synthesis.</span>
            </h2>
+           <div className="flex items-center gap-2 text-brand-primary/50 text-[10px] font-black uppercase tracking-widest mt-2">
+             <RefreshCw size={12} className="animate-spin-slow" />
+             {isAr ? 'متزامن مع بروتوكول:' : 'SYNCED WITH:'} {currentPersona}
+           </div>
         </div>
 
         <div className="grid lg:grid-cols-12 gap-8 items-stretch h-full">
@@ -105,19 +105,19 @@ const SmartNutritionTool: React.FC = () => {
                     ? 'border-brand-primary shadow-4xl scale-[1.02] z-20' 
                     : 'border-brand-dark/[0.04] dark:border-white/5 bg-white dark:bg-brand-surface hover:border-brand-primary/30 z-10'}`}
               >
-                <div className={`absolute inset-0 transition-all duration-[1s] ${selectedGoal === item.label ? 'opacity-100 scale-110' : 'opacity-50 grayscale-[0.2] group-hover:opacity-100 group-hover:grayscale-0'}`}>
+                <div className={`absolute inset-0 transition-all duration-[1s] ${selectedGoal === item.label ? 'opacity-100 scale-110' : 'opacity-40 grayscale-[0.4] group-hover:opacity-100 group-hover:grayscale-0'}`}>
                    <img src={item.img} className="w-full h-full object-cover" alt={item.label} />
                 </div>
-                <div className={`absolute inset-0 transition-opacity duration-700 ${selectedGoal === item.label ? 'bg-gradient-to-r from-brand-dark/90 via-brand-dark/40 to-transparent' : 'bg-white/40 dark:bg-brand-dark/40 group-hover:bg-transparent'}`} />
+                <div className={`absolute inset-0 transition-opacity duration-700 ${selectedGoal === item.label ? 'bg-gradient-to-r from-brand-dark/95 via-brand-dark/40 to-transparent' : 'bg-white/40 dark:bg-brand-dark/60 group-hover:bg-transparent'}`} />
                 <div className="relative p-10 flex items-center justify-between z-10 h-full">
                    <div className="flex items-center gap-6">
                       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-700 shadow-xl
-                        ${selectedGoal === item.label ? 'bg-brand-primary text-brand-dark scale-110' : 'bg-brand-light dark:bg-brand-dark text-brand-dark/20 group-hover:text-brand-primary'}`}>
+                        ${selectedGoal === item.label ? 'bg-brand-primary text-brand-dark scale-110 shadow-brand-primary/40' : 'bg-brand-light dark:bg-brand-dark text-brand-dark/20 group-hover:text-brand-primary'}`}>
                         {item.icon}
                       </div>
                       <div className="text-left">
-                        <span className={`text-[8px] font-black tracking-widest block mb-1 ${selectedGoal === item.label ? 'text-brand-primary' : 'text-white shadow-sm'}`}>{item.code}</span>
-                        <h3 className={`text-2xl font-serif font-bold transition-colors duration-500 ${selectedGoal === item.label ? 'text-white' : 'text-white drop-shadow-md group-hover:text-brand-primary'}`}>
+                        <span className={`text-[8px] font-black tracking-widest block mb-1 ${selectedGoal === item.label ? 'text-brand-primary' : 'text-white/60 shadow-sm'}`}>{item.code}</span>
+                        <h3 className={`text-2xl font-serif font-bold transition-colors duration-500 ${selectedGoal === item.label ? 'text-white' : 'text-white group-hover:text-brand-primary'}`}>
                           {item.label}
                         </h3>
                       </div>
@@ -140,46 +140,63 @@ const SmartNutritionTool: React.FC = () => {
                           <Microscope size={32} className="text-brand-primary animate-pulse" />
                        </div>
                     </div>
-                    <span className="text-[11px] font-black text-brand-primary uppercase tracking-[0.8em] animate-pulse">{isAr ? 'جاري التخليق الميتابوليكي...' : 'Initializing_Synthesis'}</span>
+                    <div className="text-center space-y-2">
+                       <span className="text-[11px] font-black text-brand-primary uppercase tracking-[0.8em] animate-pulse block">{isAr ? 'تخليق المسار الأيضي...' : 'SYNTHESIZING_BLUEPRINT'}</span>
+                       <p className="text-[9px] text-white/30 uppercase tracking-widest">{isAr ? 'معايرة البيانات لبروتوكول' : 'CALIBRATING FOR'} {currentPersona}</p>
+                    </div>
                   </div>
                 ) : result ? (
                   <div className="flex flex-col h-full animate-fade-in text-brand-dark dark:text-white">
-                    <div className="p-10 border-b border-brand-dark/[0.03] dark:border-white/5 flex justify-between items-center">
-                       <h3 className="text-4xl font-serif font-bold tracking-tighter">Metabolic <span className="text-brand-primary italic">Blueprint.</span></h3>
-                       <div className="flex items-center gap-2 bg-brand-primary text-brand-dark px-4 py-1.5 rounded-full">
+                    <div className="p-10 border-b border-brand-dark/[0.03] dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+                       <div>
+                          <h3 className="text-4xl font-serif font-bold tracking-tighter">Metabolic <span className="text-brand-primary italic">Blueprint.</span></h3>
+                          <span className="text-[8px] font-black text-brand-primary uppercase tracking-[0.4em] mt-1 block">PROTOCOL: {currentPersona}</span>
+                       </div>
+                       <div className="flex items-center gap-2 bg-brand-primary text-brand-dark px-4 py-1.5 rounded-full shadow-glow-sm">
                          <Flame size={14} />
                          <span className="text-xl font-serif font-bold">{result.totalCalories} <span className="text-[10px] ml-1">KCAL</span></span>
                        </div>
                     </div>
+                    
                     <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow">
                        {[
                          { l: isAr ? 'الإشراق' : 'SUNRISE', i: <Sun size={20} />, d: result.breakfast },
                          { l: isAr ? 'الذروة' : 'PEAK', i: <CloudSun size={20} />, d: result.lunch },
                          { l: isAr ? 'السكينة' : 'ZENITH', i: <Moon size={20} />, d: result.dinner }
                        ].map((m, idx) => (
-                         <div key={idx} className="p-8 rounded-[40px] bg-brand-cream/20 dark:bg-brand-dark flex flex-col items-center text-center shadow-xl border border-white/5 group hover:bg-brand-primary/5 transition-colors">
-                            <div className="text-brand-primary mb-4">{m.i}</div>
-                            <h4 className="text-lg font-serif font-bold line-clamp-2 mb-2">{m.d?.name}</h4>
+                         <div key={idx} className="p-8 rounded-[40px] bg-brand-cream/20 dark:bg-brand-dark/50 flex flex-col items-center text-center shadow-xl border border-white/5 group hover:bg-brand-primary/5 transition-all duration-500">
+                            <div className="text-brand-primary mb-4 group-hover:scale-110 transition-transform">{m.i}</div>
+                            <h4 className="text-lg font-serif font-bold line-clamp-2 mb-2 min-h-[56px]">{m.d?.name}</h4>
                             <div className="flex items-center justify-center gap-3 mb-4">
                                <span className="text-[8px] font-black bg-brand-primary/10 text-brand-primary px-2 py-1 rounded-md">{m.d?.calories} kcal</span>
                                <span className="text-[8px] font-black bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-md">{m.d?.protein} P</span>
                             </div>
-                            <p className="text-[10px] text-brand-dark/50 dark:text-white/30 italic leading-relaxed line-clamp-4">
+                            <p className="text-[10px] text-brand-dark/50 dark:text-white/40 italic leading-relaxed line-clamp-4">
                               {m.d?.description}
                             </p>
                          </div>
                        ))}
                     </div>
-                    <div className="m-8 mt-0 p-8 bg-brand-primary rounded-[40px] flex items-center gap-8 shadow-3xl text-white group overflow-hidden relative">
-                       <div className="absolute inset-0 bg-white/5 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-[2s]" />
-                       <Trophy size={28} className="shrink-0 animate-bounce" />
-                       <p className="text-md italic font-semibold leading-relaxed tracking-tight relative z-10">"{result.advice}"</p>
+
+                    <div className="m-8 mt-0 p-8 bg-brand-primary rounded-[40px] flex items-center gap-8 shadow-3xl text-brand-dark group overflow-hidden relative border border-white/10">
+                       <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-[2.5s] pointer-events-none" />
+                       <Trophy size={28} className="shrink-0 animate-bounce text-brand-dark" />
+                       <div className="relative z-10 space-y-1">
+                          <span className="text-[8px] font-black uppercase tracking-widest opacity-40">EXPERT ADVICE</span>
+                          <p className="text-md italic font-bold leading-relaxed tracking-tight">"{result.advice}"</p>
+                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center space-y-8 opacity-20">
-                     <Beaker size={48} strokeWidth={0.8} className="text-brand-primary" />
-                     <h4 className="text-2xl font-serif font-bold italic">{isAr ? 'بانتظار اختيار البروتوكول...' : 'Awaiting Selection.'}</h4>
+                     <div className="relative">
+                        <Beaker size={48} strokeWidth={0.8} className="text-brand-primary" />
+                        <div className="absolute -top-2 -right-2 w-4 h-4 bg-brand-primary rounded-full animate-ping" />
+                     </div>
+                     <div className="space-y-2">
+                        <h4 className="text-2xl font-serif font-bold italic">{isAr ? 'بانتظار تفعيل وحدة التخليق...' : 'Awaiting Synthesis Activation.'}</h4>
+                        <p className="text-[10px] font-black uppercase tracking-[0.4em]">{isAr ? 'اختر هدفاً للبدء' : 'SELECT TARGET GOAL'}</p>
+                     </div>
                   </div>
                 )}
              </div>

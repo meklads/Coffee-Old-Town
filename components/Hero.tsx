@@ -37,10 +37,6 @@ const Hero: React.FC = () => {
   const handlePersonaSelect = (id: BioPersona) => {
     if (currentPersona === id) return;
     setCurrentPersona(id);
-    // Visual cue that system is recalibrating if result was shown
-    if (status === 'success') {
-      setProgress(0);
-    }
     if (window.innerWidth < 1024) {
       stationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -52,8 +48,8 @@ const Hero: React.FC = () => {
     setProgress(0);
     
     const steps = isAr 
-      ? ['تنشيط...', 'تحليل جزيئي...', 'فحص المكونات...', 'توليد التقرير...'] 
-      : ['Activating...', 'Molecular Scan...', 'Checking...', 'Reporting...'];
+      ? ['تنشيط النظام...', 'بدء المسح الجزيئي...', 'تحليل المكونات الحيوية...', 'توليد التقرير الأيضي...'] 
+      : ['Activating System...', 'Molecular Scan...', 'Bio-Ingredient Analysis...', 'Generating Bio-Report...'];
     
     let currentStepIdx = 0;
     setLoadingStep(steps[0]);
@@ -69,7 +65,7 @@ const Hero: React.FC = () => {
         }
         return next;
       });
-    }, 100);
+    }, 120);
 
     try {
       const result = await analyzeMealImage(image, {
@@ -112,6 +108,7 @@ const Hero: React.FC = () => {
         setImage(reader.result as string);
         setStatus('idle'); 
         setProgress(0);
+        setLastAnalysisResult(null);
       };
       reader.readAsDataURL(file);
     }
@@ -127,7 +124,7 @@ const Hero: React.FC = () => {
           <div className="space-y-6">
             <div className="inline-flex items-center gap-3 px-3 py-1 bg-brand-primary/10 rounded-full border border-brand-primary/20">
               <div className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-brand-primary">Module v5.0 Activated</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-brand-primary">Module v5.2 Optimized</span>
             </div>
             
             <div className="space-y-4">
@@ -135,7 +132,7 @@ const Hero: React.FC = () => {
                 Precision <br /><span className="text-brand-primary italic font-normal">Biometrics.</span>
               </h1>
               <p className="text-white/30 text-base md:text-lg italic max-w-sm leading-relaxed">
-                {isAr ? 'اختر البروتوكول لبدء التحليل الجزيئي للعينة.' : 'Select protocol to initiate molecular sample scanning.'}
+                {isAr ? 'اختر البروتوكول لتعديل مخرجات التحليل الجزيئي.' : 'Select protocol to calibrate molecular diagnostic output.'}
               </p>
             </div>
           </div>
@@ -178,11 +175,11 @@ const Hero: React.FC = () => {
                     <div className="flex items-center gap-2">
                        <div className="w-1 h-1 rounded-full bg-brand-primary animate-pulse" />
                        <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.4em]">
-                         {status === 'loading' ? (isAr ? 'جاري المعايرة...' : 'Recalibrating...') : 'Live_Stream_Diagnostic'}
+                         {status === 'loading' ? (isAr ? 'جاري الفحص الجزيئي...' : 'MOLECULAR_SCAN_IN_PROGRESS') : 'Live_Diagnostic_Interface'}
                        </span>
                     </div>
                     {image && (
-                      <button onClick={() => { setImage(null); setStatus('idle'); }} className="text-white/10 hover:text-brand-primary transition-all">
+                      <button onClick={() => { setImage(null); setStatus('idle'); setLastAnalysisResult(null); }} className="text-white/10 hover:text-brand-primary transition-all">
                          <RotateCcw size={12} />
                       </button>
                     )}
@@ -195,7 +192,7 @@ const Hero: React.FC = () => {
                             <Camera size={32} strokeWidth={1} />
                          </div>
                          <div className="space-y-2">
-                            <h4 className="text-2xl font-serif font-bold italic text-white/60 tracking-tight">{isAr ? 'تلقيم الرؤية' : 'Feed Vision'}</h4>
+                            <h4 className="text-2xl font-serif font-bold italic text-white/60 tracking-tight">{isAr ? 'تلقيم العينة' : 'Insert Specimen'}</h4>
                             <p className="text-[9px] font-black text-brand-primary uppercase tracking-[0.6em]">{isAr ? 'اضغط للبدء' : 'SCAN SAMPLE'}</p>
                          </div>
                       </div>
@@ -206,14 +203,13 @@ const Hero: React.FC = () => {
                             <div className="absolute inset-0 bg-brand-primary/5 shadow-inner" />
                             <div className="absolute top-0 left-0 w-full h-[2px] bg-brand-primary/50 shadow-glow animate-scan" />
                             
-                            {/* شارة توضح البروتوكول الحالي المستهدف */}
-                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-brand-dark/80 backdrop-blur-md px-4 py-1.5 rounded-full border border-brand-primary/30 flex items-center gap-2 whitespace-nowrap">
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-brand-dark/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-brand-primary/30 flex items-center gap-2 whitespace-nowrap">
                                <RefreshCw size={10} className="text-brand-primary animate-spin-slow" />
-                               <span className="text-[8px] font-black text-white uppercase tracking-widest">{isAr ? 'هدف:' : 'TARGET:'} {currentPersona}</span>
+                               <span className="text-[8px] font-black text-white uppercase tracking-widest">{isAr ? 'بروتوكول:' : 'PROTO:'} {currentPersona}</span>
                             </div>
                          </div>
                          <button onClick={handleAnalyze} className="w-full py-5 bg-brand-primary text-brand-dark rounded-full font-black text-[10px] uppercase tracking-[0.5em] shadow-glow hover:scale-[1.02] transition-all flex items-center justify-center gap-3">
-                            <Zap size={14} /> {isAr ? 'تحليل العينة للبروتوكول' : 'ANALYZE FOR PROTOCOL'}
+                            <Zap size={14} /> {isAr ? 'بدء الفحص الجزيئي' : 'INITIATE BIO-SCAN'}
                          </button>
                       </div>
                     ) : status === 'loading' ? (
@@ -263,7 +259,7 @@ const Hero: React.FC = () => {
                            <div className="p-5 bg-red-500/10 border border-red-500/20 rounded-[30px] flex gap-4 items-start">
                               <AlertTriangle size={16} className="text-red-500 shrink-0 mt-0.5" />
                               <div className="space-y-1">
-                                 <span className="text-[7px] font-black text-red-500 uppercase tracking-widest">ALERT</span>
+                                 <span className="text-[7px] font-black text-red-500 uppercase tracking-widest">BIOMETRIC_ALERT</span>
                                  <p className="text-[10px] font-sans text-white/60 leading-relaxed">
                                    {typeof lastAnalysisResult.warnings[0] === 'object' ? (lastAnalysisResult.warnings[0] as any).text : lastAnalysisResult.warnings[0]}
                                  </p>
