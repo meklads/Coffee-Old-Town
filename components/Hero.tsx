@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { RotateCcw, Baby, HeartPulse, Zap, Camera, Utensils, Share2, Activity, Sparkles, AlertCircle, RefreshCw, UploadCloud, FileSearch, Check, Copy, Clock, Key, ExternalLink, Loader2, Info } from 'lucide-react';
+import { RotateCcw, Baby, HeartPulse, Zap, Camera, Utensils, Share2, Activity, Sparkles, AlertCircle, RefreshCw, UploadCloud, FileSearch, Check, Copy, Clock, Key, ExternalLink, Loader2, Info, ShieldAlert, Terminal } from 'lucide-react';
 import { SectionId, BioPersona } from '../types.ts';
 import { useApp } from '../context/AppContext.tsx';
 import { analyzeMealImage } from '../services/geminiService.ts';
@@ -15,7 +15,7 @@ const Hero: React.FC = () => {
   
   const [progress, setProgress] = useState(0);
   const [loadingStep, setLoadingStep] = useState('');
-  const [errorMsg, setErrorMsg] = useState<{title: string, detail: string, type?: 'quota' | 'general' | 'info'} | null>(null);
+  const [errorMsg, setErrorMsg] = useState<{title: string, detail: string, type?: 'quota' | 'general' | 'help'} | null>(null);
   const [shareStatus, setShareStatus] = useState<'idle' | 'shared' | 'error'>('idle');
   const [isConnectingKey, setIsConnectingKey] = useState(false);
   
@@ -85,23 +85,21 @@ const Hero: React.FC = () => {
     if (aistudio && typeof aistudio.openSelectKey === 'function') {
       try {
         await aistudio.openSelectKey();
-        // نفترض النجاح للبدء فوراً وتفادي race conditions
         setTimeout(() => handleReset(), 500);
       } catch (e) {
         setIsConnectingKey(false);
       }
     } else {
-      // إذا كان خارج البيئة، ننتظر قليلاً ثم نعطي خيار المحاولة العادية
       setTimeout(() => {
         setIsConnectingKey(false);
         setErrorMsg({
-          title: isAr ? "نظام الاستجابة المحدود" : "Limited Response System",
+          title: isAr ? "دليل تفعيل المختبر" : "Lab Activation Guide",
           detail: isAr 
-            ? "الطلب حالياً مرتفع جداً. يرجى المحاولة مرة أخرى بعد قليل أو مراجعة إعدادات المختبر."
-            : "Traffic is exceptionally high. Please attempt again in a few moments or review lab settings.",
-          type: 'info'
+            ? "أنت تشاهد النسخة التجريبية حالياً. لربط مفتاحك الشخصي، يرجى تشغيل التطبيق داخل بيئة Google AI Studio أو ترقية خطة الاستضافة."
+            : "You are currently in preview mode. To link your key, launch this app within Google AI Studio or upgrade your hosting plan.",
+          type: 'help'
         });
-      }, 1000);
+      }, 800);
     }
   };
 
@@ -120,7 +118,7 @@ const Hero: React.FC = () => {
 
     progressIntervalRef.current = window.setInterval(() => {
       setProgress(prev => {
-        const next = prev + Math.floor(Math.random() * 4) + 1;
+        const next = prev + Math.floor(Math.random() * 5) + 1;
         if (next >= 99) return 99;
         const stepIdx = Math.floor((next / 100) * steps.length);
         if (stepIdx !== currentStepIdx && stepIdx < steps.length) {
@@ -129,7 +127,7 @@ const Hero: React.FC = () => {
         }
         return next;
       });
-    }, 120);
+    }, 100);
 
     try {
       const result = await analyzeMealImage(image, {
@@ -164,16 +162,16 @@ const Hero: React.FC = () => {
       
       if (isQuotaError) {
         setErrorMsg({
-          title: isAr ? "تحجيم الأداء الأيضي" : "Metabolic Throttling",
+          title: isAr ? "صيانة النظام الأيضي" : "System Maintenance",
           detail: isAr 
-            ? "لقد وصل المختبر العام للحد الأقصى اليومي. للحصول على أداء فوري وغير محدود، يرجى ربط مفتاحك الخاص."
-            : "The shared lab reached its daily limit. For instant and unlimited performance, please connect your personal key.",
+            ? "وصل المختبر المشترك للحد الأقصى من الطلبات اليومية. الأولوية حالياً للمفاتيح الخاصة."
+            : "The shared laboratory reached its daily request limit. Priority given to personal keyholders.",
           type: 'quota'
         });
       } else {
         setErrorMsg({
-          title: isAr ? "فشل التحليل البيومتري" : "Biometric Scan Failed",
-          detail: isAr ? `خطأ في المعالجة: ${err.message}` : `Processing error: ${err.message}`,
+          title: isAr ? "فشل الوحدة النمطية" : "Module Failure",
+          detail: isAr ? `خطأ في المعالجة: ${err.message}` : `Processing fault: ${err.message}`,
           type: 'general'
         });
       }
@@ -213,7 +211,7 @@ const Hero: React.FC = () => {
           setImage(reader.result as string);
           setStatus('idle'); 
           setProgress(0);
-        }, 600);
+        }, 500);
       };
       reader.readAsDataURL(file);
     }
@@ -324,27 +322,58 @@ const Hero: React.FC = () => {
                          <h3 className={`font-black uppercase tracking-[0.6em] animate-pulse text-[9px] lg:text-[11px] ${activeConfig.accent}`}>{loadingStep}</h3>
                       </div>
                     ) : status === 'error' && errorMsg ? (
-                      <div className="h-full flex flex-col items-center justify-center p-6 lg:p-10 text-center space-y-8 animate-fade-in">
-                         {errorMsg.type === 'quota' ? <Clock size={40} className="text-brand-primary animate-pulse" /> : errorMsg.type === 'info' ? <Info size={40} className="text-brand-primary" /> : <AlertCircle size={40} className="text-red-500" />}
-                         <div className="space-y-4">
-                            <h4 className={`text-2xl lg:text-3xl font-serif font-bold italic ${errorMsg.type === 'general' ? 'text-red-500' : 'text-brand-primary'}`}>{errorMsg.title}</h4>
-                            <p className="text-white/40 text-[10px] uppercase tracking-widest px-4 leading-relaxed">{errorMsg.detail}</p>
+                      <div className="h-full flex flex-col items-center justify-center p-6 lg:p-10 text-center animate-fade-in">
+                         <div className="mb-6">
+                            {errorMsg.type === 'quota' ? (
+                              <div className="relative">
+                                 <ShieldAlert size={48} className="text-brand-primary animate-pulse" />
+                                 <div className="absolute -inset-4 bg-brand-primary/10 rounded-full blur-xl" />
+                              </div>
+                            ) : errorMsg.type === 'help' ? (
+                              <Terminal size={48} className="text-brand-primary" />
+                            ) : (
+                              <AlertCircle size={48} className="text-red-500" />
+                            )}
+                         </div>
+                         
+                         <div className="space-y-4 mb-8">
+                            <h4 className={`text-2xl lg:text-4xl font-serif font-bold italic tracking-tight ${errorMsg.type === 'general' ? 'text-red-500' : 'text-brand-primary'}`}>
+                               {errorMsg.title}
+                            </h4>
+                            <p className="text-white/40 text-[11px] leading-relaxed max-w-xs mx-auto font-medium">
+                               {errorMsg.detail}
+                            </p>
                          </div>
                          
                          <div className="flex flex-col gap-3 w-full">
-                            <button 
-                              onClick={handleConnectPersonalKey} 
-                              disabled={isConnectingKey}
-                              className={`w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] shadow-glow flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-70
-                                ${errorMsg.type === 'quota' ? 'bg-brand-primary text-brand-dark' : 'bg-white/10 text-white'}`}
-                            >
-                               {isConnectingKey ? <Loader2 size={14} className="animate-spin" /> : <Key size={14} />} 
-                               {isAr ? 'استخدام مفتاحك الشخصي' : 'USE PERSONAL KEY'}
-                            </button>
-                            <button onClick={handleReset} className={`w-full py-5 bg-white/5 text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.4em] border transition-all hover:bg-white/10 ${errorMsg.type === 'general' ? 'border-red-500/20' : 'border-brand-primary/20'}`}>
-                               {isAr ? 'المحاولة مجدداً' : 'RETRY SCAN'}
+                            {(errorMsg.type === 'quota' || errorMsg.type === 'help') ? (
+                              <button 
+                                onClick={handleConnectPersonalKey} 
+                                disabled={isConnectingKey}
+                                className="w-full py-5 bg-brand-primary text-brand-dark rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] shadow-glow flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-70"
+                              >
+                                 {isConnectingKey ? <Loader2 size={16} className="animate-spin" /> : <Key size={16} />} 
+                                 {isAr ? 'ربط المفتاح الشخصي' : 'LINK PERSONAL KEY'}
+                              </button>
+                            ) : null}
+                            <button onClick={handleReset} className={`w-full py-5 bg-white/5 text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.4em] border border-white/10 transition-all hover:bg-white/10`}>
+                               {isAr ? 'إعادة التشغيل' : 'RESTART SYSTEM'}
                             </button>
                          </div>
+                         
+                         {errorMsg.type === 'help' && (
+                           <div className="mt-6 flex flex-col gap-2">
+                             <a 
+                               href="https://ai.google.dev/gemini-api/docs/billing" 
+                               target="_blank" 
+                               rel="noopener noreferrer"
+                               className="flex items-center justify-center gap-2 text-[8px] text-white/30 uppercase tracking-widest font-black hover:text-brand-primary transition-colors"
+                             >
+                               <ExternalLink size={10} />
+                               {isAr ? 'دليل الفوترة والأسعار' : 'BILLING & QUOTA GUIDE'}
+                             </a>
+                           </div>
+                         )}
                       </div>
                     ) : status === 'success' && lastAnalysisResult ? (
                       <div className="w-full space-y-4 lg:space-y-6 animate-fade-in h-full flex flex-col justify-center">
