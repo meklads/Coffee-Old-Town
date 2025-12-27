@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { RotateCcw, Baby, HeartPulse, Zap, Camera, Utensils, Share2, AlertTriangle, Info, Download, FileText } from 'lucide-react';
+import { RotateCcw, Baby, HeartPulse, Zap, Camera, Utensils, Share2, AlertTriangle, Info, Download, FileText, RefreshCw } from 'lucide-react';
 import { SectionId, BioPersona } from '../types.ts';
 import { useApp } from '../context/AppContext.tsx';
 import { analyzeMealImage } from '../services/geminiService.ts';
@@ -24,8 +24,23 @@ const Hero: React.FC = () => {
     { id: 'ATHLETE' as BioPersona, label: isAr ? 'رياضي' : 'ATHLETE', icon: <Zap size={14} />, slogan: isAr ? 'أداء' : 'Power' }
   ];
 
+  // Logic: Re-calibrate scanner when persona changes
+  useEffect(() => {
+    if (status === 'success') {
+      // If we have a result and user changes persona, go back to "ready to scan" mode 
+      // but keep the image for the new analysis.
+      setStatus('idle');
+      setLastAnalysisResult(null);
+    }
+  }, [currentPersona]);
+
   const handlePersonaSelect = (id: BioPersona) => {
+    if (currentPersona === id) return;
     setCurrentPersona(id);
+    // Visual cue that system is recalibrating if result was shown
+    if (status === 'success') {
+      setProgress(0);
+    }
     if (window.innerWidth < 1024) {
       stationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -162,7 +177,9 @@ const Hero: React.FC = () => {
                  <div className="p-6 flex justify-between items-center bg-white/[0.02] border-b border-white/5 shrink-0">
                     <div className="flex items-center gap-2">
                        <div className="w-1 h-1 rounded-full bg-brand-primary animate-pulse" />
-                       <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.4em]">Live_Stream_Diagnostic</span>
+                       <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.4em]">
+                         {status === 'loading' ? (isAr ? 'جاري المعايرة...' : 'Recalibrating...') : 'Live_Stream_Diagnostic'}
+                       </span>
                     </div>
                     {image && (
                       <button onClick={() => { setImage(null); setStatus('idle'); }} className="text-white/10 hover:text-brand-primary transition-all">
@@ -184,13 +201,19 @@ const Hero: React.FC = () => {
                       </div>
                     ) : status === 'idle' && image ? (
                       <div className="h-full flex flex-col items-center justify-center space-y-8 animate-fade-in">
-                         <div className="relative aspect-square w-full max-w-[240px] rounded-[40px] overflow-hidden border border-white/5 shadow-2xl">
-                            <img src={image} className="w-full h-full object-cover grayscale-[0.2]" alt="Sample" />
+                         <div className="relative aspect-square w-full max-w-[240px] rounded-[40px] overflow-hidden border border-white/5 shadow-2xl group/img">
+                            <img src={image} className="w-full h-full object-cover grayscale-[0.2] group-hover/img:grayscale-0 transition-all duration-700" alt="Sample" />
                             <div className="absolute inset-0 bg-brand-primary/5 shadow-inner" />
                             <div className="absolute top-0 left-0 w-full h-[2px] bg-brand-primary/50 shadow-glow animate-scan" />
+                            
+                            {/* شارة توضح البروتوكول الحالي المستهدف */}
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-brand-dark/80 backdrop-blur-md px-4 py-1.5 rounded-full border border-brand-primary/30 flex items-center gap-2 whitespace-nowrap">
+                               <RefreshCw size={10} className="text-brand-primary animate-spin-slow" />
+                               <span className="text-[8px] font-black text-white uppercase tracking-widest">{isAr ? 'هدف:' : 'TARGET:'} {currentPersona}</span>
+                            </div>
                          </div>
-                         <button onClick={handleAnalyze} className="w-full py-5 bg-brand-primary text-brand-dark rounded-full font-black text-[10px] uppercase tracking-[0.5em] shadow-glow hover:scale-[1.02] transition-all">
-                            {isAr ? 'بدء الفحص' : 'INITIATE ANALYSIS'}
+                         <button onClick={handleAnalyze} className="w-full py-5 bg-brand-primary text-brand-dark rounded-full font-black text-[10px] uppercase tracking-[0.5em] shadow-glow hover:scale-[1.02] transition-all flex items-center justify-center gap-3">
+                            <Zap size={14} /> {isAr ? 'تحليل العينة للبروتوكول' : 'ANALYZE FOR PROTOCOL'}
                          </button>
                       </div>
                     ) : status === 'loading' ? (
