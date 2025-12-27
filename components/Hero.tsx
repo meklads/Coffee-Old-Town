@@ -17,18 +17,46 @@ const Hero: React.FC = () => {
   const stationRef = useRef<HTMLDivElement>(null);
   const progressIntervalRef = useRef<number | null>(null);
 
-  const personaData = [
-    { id: 'GENERAL' as BioPersona, label: isAr ? 'عام' : 'GENERAL', icon: <Utensils size={14} />, slogan: isAr ? 'يومي' : 'Daily' },
-    { id: 'PREGNANCY' as BioPersona, label: isAr ? 'حمل' : 'PREGNANCY', icon: <Baby size={14} />, slogan: isAr ? 'نمو' : 'Growth' },
-    { id: 'DIABETIC' as BioPersona, label: isAr ? 'سكري' : 'DIABETIC', icon: <HeartPulse size={14} />, slogan: isAr ? 'توازن' : 'Sync' },
-    { id: 'ATHLETE' as BioPersona, label: isAr ? 'رياضي' : 'ATHLETE', icon: <Zap size={14} />, slogan: isAr ? 'أداء' : 'Power' }
-  ];
+  // Dynamic Color Map for each Persona
+  const personaConfigs: Record<BioPersona, { label: string, icon: React.ReactNode, slogan: string, color: string, glow: string, border: string }> = {
+    GENERAL: { 
+      label: isAr ? 'عام' : 'GENERAL', 
+      icon: <Utensils size={14} />, 
+      slogan: isAr ? 'يومي' : 'Daily',
+      color: 'bg-[#C2A36B]', // Gold
+      glow: 'shadow-[0_0_20px_rgba(194,163,107,0.4)]',
+      border: 'border-[#C2A36B]'
+    },
+    PREGNANCY: { 
+      label: isAr ? 'حمل' : 'PREGNANCY', 
+      icon: <Baby size={14} />, 
+      slogan: isAr ? 'نمو' : 'Growth',
+      color: 'bg-[#E5C1CD]', // Rose
+      glow: 'shadow-[0_0_20px_rgba(229,193,205,0.4)]',
+      border: 'border-[#E5C1CD]'
+    },
+    DIABETIC: { 
+      label: isAr ? 'سكري' : 'DIABETIC', 
+      icon: <HeartPulse size={14} />, 
+      slogan: isAr ? 'توازن' : 'Sync',
+      color: 'bg-[#64B5F6]', // Azure
+      glow: 'shadow-[0_0_20px_rgba(100,181,246,0.4)]',
+      border: 'border-[#64B5F6]'
+    },
+    ATHLETE: { 
+      label: isAr ? 'رياضي' : 'ATHLETE', 
+      icon: <Zap size={14} />, 
+      slogan: isAr ? 'أداء' : 'Power',
+      color: 'bg-[#FF7043]', // Ember
+      glow: 'shadow-[0_0_20px_rgba(255,112,67,0.4)]',
+      border: 'border-[#FF7043]'
+    }
+  };
 
-  // Logic: Re-calibrate scanner when persona changes
+  const activeConfig = personaConfigs[currentPersona];
+
   useEffect(() => {
     if (status === 'success') {
-      // If we have a result and user changes persona, go back to "ready to scan" mode 
-      // but keep the image for the new analysis.
       setStatus('idle');
       setLastAnalysisResult(null);
     }
@@ -122,14 +150,14 @@ const Hero: React.FC = () => {
         <div className="lg:w-[45%] flex flex-col justify-center py-6 animate-fade-in z-20 space-y-12">
           
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-3 px-3 py-1 bg-brand-primary/10 rounded-full border border-brand-primary/20">
-              <div className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-brand-primary">Module v5.2 Optimized</span>
+            <div className={`inline-flex items-center gap-3 px-3 py-1 bg-white/5 rounded-full border border-white/10 transition-colors duration-1000`}>
+              <div className={`w-1.5 h-1.5 rounded-full animate-pulse transition-colors duration-1000 ${activeConfig.color}`} />
+              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-white/50">Module v5.5 Multi-Proto</span>
             </div>
             
             <div className="space-y-4">
               <h1 className="text-5xl md:text-7xl xl:text-8xl font-serif font-bold text-white leading-[0.85] tracking-tighter">
-                Precision <br /><span className="text-brand-primary italic font-normal">Biometrics.</span>
+                Precision <br /><span className={`italic font-normal transition-colors duration-1000 ${currentPersona === 'GENERAL' ? 'text-brand-primary' : activeConfig.color.replace('bg-', 'text-')}`}>Biometrics.</span>
               </h1>
               <p className="text-white/30 text-base md:text-lg italic max-w-sm leading-relaxed">
                 {isAr ? 'اختر البروتوكول لتعديل مخرجات التحليل الجزيئي.' : 'Select protocol to calibrate molecular diagnostic output.'}
@@ -138,26 +166,27 @@ const Hero: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-4 max-w-md">
-            {personaData.map((p) => {
-              const isActive = currentPersona === p.id;
+            {(Object.keys(personaConfigs) as BioPersona[]).map((id) => {
+              const p = personaConfigs[id];
+              const isActive = currentPersona === id;
               return (
                 <button
-                  key={p.id}
-                  onClick={() => handlePersonaSelect(p.id)}
+                  key={id}
+                  onClick={() => handlePersonaSelect(id)}
                   className={`group p-5 md:p-6 rounded-[35px] border transition-all duration-500 text-left relative overflow-hidden flex flex-col justify-between h-[120px] md:h-[140px]
                     ${isActive 
-                      ? 'bg-brand-primary border-brand-primary text-brand-dark shadow-glow-sm scale-[1.02]' 
-                      : 'bg-white/5 border-white/5 text-white/40 hover:bg-brand-primary/80 hover:text-brand-dark'}`}
+                      ? `${p.color} ${p.border} text-brand-dark ${p.glow} scale-[1.02]` 
+                      : 'bg-white/5 border-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`}
                 >
                   <div className="flex justify-between items-start">
-                     <span className={`text-[7px] font-black uppercase tracking-widest block transition-colors duration-500 ${isActive ? 'text-brand-dark/60' : 'opacity-50 group-hover:text-brand-dark/60'}`}>PROTO</span>
-                     <div className={`transition-all duration-500 ${isActive ? 'opacity-100 text-brand-dark' : 'opacity-20 group-hover:opacity-100 group-hover:text-brand-dark'}`}>
+                     <span className={`text-[7px] font-black uppercase tracking-widest block transition-colors duration-500 ${isActive ? 'text-brand-dark/60' : 'opacity-50 group-hover:text-white/60'}`}>PROTO</span>
+                     <div className={`transition-all duration-500 ${isActive ? 'opacity-100 text-brand-dark' : 'opacity-20 group-hover:opacity-100'}`}>
                         {p.icon}
                      </div>
                   </div>
                   <div className="mt-auto">
-                    <span className={`text-base md:text-lg font-sans font-bold block leading-none mb-1 transition-colors duration-500 ${isActive ? 'text-brand-dark' : 'group-hover:text-brand-dark'}`}>{p.label}</span>
-                    <span className={`text-[9px] italic font-medium block transition-colors duration-500 ${isActive ? 'text-brand-dark/50' : 'opacity-30 group-hover:text-brand-dark/50'}`}>{p.slogan}</span>
+                    <span className={`text-base md:text-lg font-sans font-bold block leading-none mb-1 transition-colors duration-500`}>{p.label}</span>
+                    <span className={`text-[9px] italic font-medium block transition-colors duration-500 ${isActive ? 'text-brand-dark/50' : 'opacity-30 group-hover:text-white/50'}`}>{p.slogan}</span>
                   </div>
                 </button>
               );
@@ -167,13 +196,14 @@ const Hero: React.FC = () => {
         
         {/* اليمين: السكانر الاحترافي */}
         <div ref={stationRef} className="lg:w-[55%] w-full mt-10 lg:mt-0 flex flex-col items-center lg:items-end justify-center relative z-10">
-           <div className="w-full max-w-[480px] aspect-[4/5] bg-[#0A0908] rounded-[60px] border border-white/10 shadow-[0_60px_120px_-30px_rgba(0,0,0,1)] flex flex-col relative overflow-hidden group">
+           {/* Fix: Replaced missing isActive variable with true, as a persona configuration is always active for the scanner component */}
+           <div className={`w-full max-w-[480px] aspect-[4/5] bg-[#0A0908] rounded-[60px] border transition-all duration-1000 ${true ? activeConfig.border.replace('border-', 'border-') + ' shadow-[0_60px_120px_-30px_rgba(0,0,0,1)]' : 'border-white/10'} flex flex-col relative overflow-hidden group`}>
               
               <div className="flex-1 m-4 rounded-[45px] bg-[#050505] overflow-hidden flex flex-col border border-white/5">
                  
                  <div className="p-6 flex justify-between items-center bg-white/[0.02] border-b border-white/5 shrink-0">
                     <div className="flex items-center gap-2">
-                       <div className="w-1 h-1 rounded-full bg-brand-primary animate-pulse" />
+                       <div className={`w-1 h-1 rounded-full animate-pulse transition-colors duration-1000 ${activeConfig.color}`} />
                        <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.4em]">
                          {status === 'loading' ? (isAr ? 'جاري الفحص الجزيئي...' : 'MOLECULAR_SCAN_IN_PROGRESS') : 'Live_Diagnostic_Interface'}
                        </span>
@@ -188,27 +218,27 @@ const Hero: React.FC = () => {
                  <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth p-6 md:p-8">
                     {status === 'idle' && !image ? (
                       <div onClick={() => fileInputRef.current?.click()} className="h-full flex flex-col items-center justify-center text-center space-y-8 cursor-pointer group/up py-10">
-                         <div className="w-20 h-20 bg-brand-primary/5 border border-dashed border-brand-primary/20 rounded-full flex items-center justify-center text-brand-primary group-hover/up:bg-brand-primary group-hover/up:text-brand-dark transition-all duration-700 shadow-glow">
+                         <div className={`w-20 h-20 bg-white/5 border border-dashed border-white/10 rounded-full flex items-center justify-center transition-all duration-700 group-hover/up:border-solid group-hover/up:${activeConfig.color.replace('bg-', 'border-')} group-hover/up:${activeConfig.color.replace('bg-', 'text-')}`}>
                             <Camera size={32} strokeWidth={1} />
                          </div>
                          <div className="space-y-2">
                             <h4 className="text-2xl font-serif font-bold italic text-white/60 tracking-tight">{isAr ? 'تلقيم العينة' : 'Insert Specimen'}</h4>
-                            <p className="text-[9px] font-black text-brand-primary uppercase tracking-[0.6em]">{isAr ? 'اضغط للبدء' : 'SCAN SAMPLE'}</p>
+                            <p className={`text-[9px] font-black uppercase tracking-[0.6em] transition-colors duration-1000 ${activeConfig.color.replace('bg-', 'text-')}`}>{isAr ? 'اضغط للبدء' : 'SCAN SAMPLE'}</p>
                          </div>
                       </div>
                     ) : status === 'idle' && image ? (
                       <div className="h-full flex flex-col items-center justify-center space-y-8 animate-fade-in">
                          <div className="relative aspect-square w-full max-w-[240px] rounded-[40px] overflow-hidden border border-white/5 shadow-2xl group/img">
                             <img src={image} className="w-full h-full object-cover grayscale-[0.2] group-hover/img:grayscale-0 transition-all duration-700" alt="Sample" />
-                            <div className="absolute inset-0 bg-brand-primary/5 shadow-inner" />
-                            <div className="absolute top-0 left-0 w-full h-[2px] bg-brand-primary/50 shadow-glow animate-scan" />
+                            <div className="absolute inset-0 bg-white/5 shadow-inner" />
+                            <div className={`absolute top-0 left-0 w-full h-[2px] shadow-glow animate-scan transition-colors duration-1000 ${activeConfig.color}`} />
                             
-                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-brand-dark/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-brand-primary/30 flex items-center gap-2 whitespace-nowrap">
-                               <RefreshCw size={10} className="text-brand-primary animate-spin-slow" />
+                            <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 bg-brand-dark/90 backdrop-blur-md px-4 py-1.5 rounded-full border flex items-center gap-2 whitespace-nowrap transition-colors duration-1000 ${activeConfig.border}`}>
+                               <RefreshCw size={10} className={`animate-spin-slow transition-colors duration-1000 ${activeConfig.color.replace('bg-', 'text-')}`} />
                                <span className="text-[8px] font-black text-white uppercase tracking-widest">{isAr ? 'بروتوكول:' : 'PROTO:'} {currentPersona}</span>
                             </div>
                          </div>
-                         <button onClick={handleAnalyze} className="w-full py-5 bg-brand-primary text-brand-dark rounded-full font-black text-[10px] uppercase tracking-[0.5em] shadow-glow hover:scale-[1.02] transition-all flex items-center justify-center gap-3">
+                         <button onClick={handleAnalyze} className={`w-full py-5 text-brand-dark rounded-full font-black text-[10px] uppercase tracking-[0.5em] shadow-glow hover:scale-[1.02] transition-all flex items-center justify-center gap-3 duration-1000 ${activeConfig.color}`}>
                             <Zap size={14} /> {isAr ? 'بدء الفحص الجزيئي' : 'INITIATE BIO-SCAN'}
                          </button>
                       </div>
@@ -217,20 +247,30 @@ const Hero: React.FC = () => {
                          <div className="relative w-40 h-40">
                             <svg className="w-full h-full -rotate-90">
                                <circle cx="50%" cy="50%" r="45%" stroke="currentColor" strokeWidth="1" fill="transparent" className="text-white/5" />
-                               <circle cx="50%" cy="50%" r="45%" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray="283" strokeDashoffset={283 - (283 * progress / 100)} className="text-brand-primary transition-all duration-500" />
+                               <circle 
+                                  cx="50%" 
+                                  cy="50%" 
+                                  r="45%" 
+                                  stroke="currentColor" 
+                                  strokeWidth="8" 
+                                  fill="transparent" 
+                                  strokeDasharray="283" 
+                                  strokeDashoffset={283 - (283 * progress / 100)} 
+                                  className={`transition-all duration-500 ${activeConfig.color.replace('bg-', 'text-')}`} 
+                                />
                             </svg>
                             <div className="absolute inset-0 flex items-center justify-center font-sans font-bold text-4xl text-white">{progress}%</div>
                          </div>
                          <div className="text-center space-y-1">
-                           <h3 className="text-brand-primary font-black uppercase tracking-[0.5em] animate-pulse text-[9px]">{loadingStep}</h3>
+                           <h3 className={`font-black uppercase tracking-[0.5em] animate-pulse text-[9px] transition-colors duration-1000 ${activeConfig.color.replace('bg-', 'text-')}`}>{loadingStep}</h3>
                          </div>
                       </div>
                     ) : status === 'success' && lastAnalysisResult ? (
                       <div className="w-full space-y-8 animate-fade-in py-2">
                          <div className="space-y-3">
                             <div className="flex items-center gap-2">
-                              <FileText size={12} className="text-brand-primary" />
-                              <span className="text-[8px] font-black text-brand-primary uppercase tracking-widest">{isAr ? 'التقرير الأيضي' : 'BIO-REPORT'}</span>
+                              <FileText size={12} className={activeConfig.color.replace('bg-', 'text-')} />
+                              <span className={`text-[8px] font-black uppercase tracking-widest transition-colors duration-1000 ${activeConfig.color.replace('bg-', 'text-')}`}>{isAr ? 'التقرير الأيضي' : 'BIO-REPORT'}</span>
                             </div>
                             <h2 className="text-xl font-sans font-bold text-white tracking-tight leading-relaxed">{lastAnalysisResult.summary}</h2>
                          </div>
@@ -267,13 +307,13 @@ const Hero: React.FC = () => {
                            </div>
                          )}
 
-                         <div className="p-6 bg-brand-primary/5 border border-brand-primary/20 rounded-[35px] relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-4 text-brand-primary/10"><Info size={16} /></div>
+                         <div className={`p-6 bg-white/5 border border-white/10 rounded-[35px] relative overflow-hidden`}>
+                            <div className={`absolute top-0 right-0 p-4 opacity-10 transition-colors duration-1000 ${activeConfig.color.replace('bg-', 'text-')}`}><Info size={16} /></div>
                             <p className="text-white/70 text-xs font-sans italic leading-relaxed">"{lastAnalysisResult.personalizedAdvice}"</p>
                          </div>
 
                          <div className="flex gap-4 pt-4">
-                            <button className="flex-1 py-5 bg-white/5 hover:bg-brand-primary hover:text-brand-dark transition-all rounded-[25px] flex items-center justify-center gap-3 text-[9px] font-black uppercase tracking-widest text-white border border-white/5">
+                            <button className={`flex-1 py-5 bg-white/5 hover:${activeConfig.color} hover:text-brand-dark transition-all rounded-[25px] flex items-center justify-center gap-3 text-[9px] font-black uppercase tracking-widest text-white border border-white/5`}>
                                <Share2 size={14} /> SHARE
                             </button>
                             <button onClick={handleDownload} className="w-16 py-5 bg-white/5 hover:bg-white hover:text-brand-dark transition-all rounded-[25px] flex items-center justify-center text-white border border-white/5">
@@ -287,14 +327,14 @@ const Hero: React.FC = () => {
                  <div className="p-4 border-t border-white/5 flex justify-between items-center bg-white/[0.01] shrink-0">
                     <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.5em]">System_Secure</span>
                     <div className="flex gap-1">
-                       <div className="w-1 h-1 rounded-full bg-brand-primary/40" />
-                       <div className="w-1 h-1 rounded-full bg-brand-primary" />
+                       <div className={`w-1 h-1 rounded-full opacity-40 transition-colors duration-1000 ${activeConfig.color}`} />
+                       <div className={`w-1 h-1 rounded-full transition-colors duration-1000 ${activeConfig.color}`} />
                     </div>
                  </div>
               </div>
 
-              <div className="absolute right-0 top-1/3 bottom-1/3 w-[2px] bg-brand-primary/20 rounded-l-full" />
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 h-16 w-1 bg-brand-primary/40 rounded-r-full shadow-glow" />
+              <div className={`absolute right-0 top-1/3 bottom-1/3 w-[2px] rounded-l-full transition-colors duration-1000 ${activeConfig.color.replace('bg-', 'bg-')}`} style={{ opacity: 0.3 }} />
+              <div className={`absolute left-0 top-1/2 -translate-y-1/2 h-16 w-1 rounded-r-full shadow-glow transition-colors duration-1000 ${activeConfig.color}`} />
            </div>
 
            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />

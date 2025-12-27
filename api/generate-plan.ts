@@ -1,6 +1,10 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
+export const config = {
+  maxDuration: 60,
+};
+
 const dayPlanSchema = {
   type: Type.OBJECT,
   properties: {
@@ -51,12 +55,17 @@ const dayPlanSchema = {
 };
 
 export default async function handler(req: any, res: any) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
   const { request, lang, feedback } = req.body;
   const apiKey = process.env.API_KEY;
 
-  if (!apiKey) return res.status(500).json({ error: 'SERVER_KEY_MISSING' });
+  if (!apiKey) return res.status(500).json({ error: 'SYSTEM_FAULT: API key missing.' });
 
   try {
     const ai = new GoogleGenAI({ apiKey });
@@ -72,23 +81,18 @@ export default async function handler(req: any, res: any) {
     Language: ${language}
 
     TASK: Synthesize a 1-day precision metabolic blueprint. 
-    The meals must be scientifically selected for the specific goal:
-    - If Focus: High Omega-3s, Choline, and stable glucose.
-    - If Immunity: High Vitamin C, Zinc, Quercetin.
-    - If Recovery: High Branched-Chain Amino Acids (BCAAs) and anti-inflammatory substrates.
-
     Instructions:
-    1. Provide exact calorie/protein estimates based on scientific averages.
+    1. Provide exact calorie/protein estimates.
     2. Description must explain the biological "Why" for this specific user persona.
     3. Return strictly valid JSON following the schema.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview', // استخدام نسخة Pro لأعلى دقة في التخطيط المعقد
-      contents: prompt,
+      model: 'gemini-3-pro-preview',
+      contents: [{ parts: [{ text: prompt }] }],
       config: { 
         responseMimeType: "application/json",
         responseSchema: dayPlanSchema,
-        temperature: 0.2 // درجة حرارة منخفضة لضمان الثبات العلمي
+        temperature: 0.2
       }
     });
 
@@ -97,7 +101,7 @@ export default async function handler(req: any, res: any) {
     
     return res.status(200).json(JSON.parse(text.trim()));
   } catch (error: any) {
-    console.error("Plan Generation Error:", error);
+    console.error("Plan Generation API Error:", error);
     return res.status(500).json({ error: 'Failed to generate plan', details: error.message });
   }
 }

@@ -1,12 +1,6 @@
 
 import { UserHealthProfile, MealAnalysisResult, MealPlanRequest, DayPlan, FeedbackEntry } from '../types.ts';
 
-/**
- * خدمة Gemini المطورة للعمل على Vercel
- * تستخدم هذه الخدمة المسارات البرمجية الداخلية (API Routes) لضمان حماية مفتاح البرمجة
- * ولتجاوز قيود المتصفح.
- */
-
 export const analyzeMealImage = async (base64Image: string, profile: UserHealthProfile, lang: string = 'en'): Promise<MealAnalysisResult | null> => {
   try {
     const response = await fetch('/api/analyze-meal', {
@@ -37,11 +31,14 @@ export const generateMealPlan = async (request: MealPlanRequest, lang: string, f
       body: JSON.stringify({ request, lang, feedback })
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.details || "GENERATION_FAULT");
+    }
     return await response.json();
-  } catch (error) {
+  } catch (error: any) {
     console.error("Plan Generation Error:", error);
-    return null;
+    throw error;
   }
 };
 
@@ -63,6 +60,5 @@ export const generateMascot = async (prompt: string): Promise<string | null> => 
 };
 
 export const isSystemKeyAvailable = async (): Promise<boolean> => {
-  // في Vercel، نفحص المفتاح من خلال محاولة استدعاء بسيطة أو افتراض وجوده إذا لم نكن في بيئة تطوير
   return true; 
 };

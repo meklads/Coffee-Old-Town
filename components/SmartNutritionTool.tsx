@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldPlus, Zap, Activity, Sun, CloudSun, Moon, ArrowUpRight, Sparkles, Microscope, ChevronRight, Beaker, Atom, Flame, Trophy, RefreshCw } from 'lucide-react';
+import { ShieldPlus, Zap, Activity, Sun, CloudSun, Moon, ArrowUpRight, Sparkles, Microscope, ChevronRight, Beaker, Atom, Flame, Trophy, RefreshCw, AlertCircle } from 'lucide-react';
 import { SectionId, DayPlan } from '../types.ts';
 import { generateMealPlan } from '../services/geminiService.ts';
 import { useApp } from '../context/AppContext.tsx';
@@ -8,6 +8,7 @@ import { useApp } from '../context/AppContext.tsx';
 const SmartNutritionTool: React.FC = () => {
   const { selectedGoal, setSelectedGoal, feedbackHistory, language, currentPersona } = useApp();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<DayPlan | null>(null);
   const chamberRef = useRef<HTMLDivElement>(null);
 
@@ -40,10 +41,10 @@ const SmartNutritionTool: React.FC = () => {
     }
   ];
 
-  // Reset results if persona changes globally
   useEffect(() => {
     setResult(null);
     setSelectedGoal(null);
+    setError(null);
   }, [currentPersona]);
 
   const handleGenerate = async (goalLabel: string) => {
@@ -55,10 +56,10 @@ const SmartNutritionTool: React.FC = () => {
 
     setSelectedGoal(goalLabel);
     setLoading(true);
+    setError(null);
     setResult(null);
     
     try {
-      // Ensuring the generation is context-aware of the persona
       const plan = await generateMealPlan({ 
         goal: goalLabel, 
         diet: 'balanced',
@@ -68,8 +69,9 @@ const SmartNutritionTool: React.FC = () => {
       if (plan) {
         setResult(plan);
       }
-    } catch (error) {
-      console.error("Neural Synthesis error:", error);
+    } catch (err: any) {
+      console.error("Neural Synthesis error:", err);
+      setError(isAr ? 'فشل التخليق العصبي. يرجى التحقق من الاتصال والمحاولة مرة أخرى.' : 'Neural Synthesis failed. Please check connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -140,11 +142,27 @@ const SmartNutritionTool: React.FC = () => {
                           <Microscope size={32} className="text-brand-primary animate-pulse" />
                        </div>
                     </div>
-                    <div className="text-center space-y-2">
+                    <div className="text-center space-y-2 px-10">
                        <span className="text-[11px] font-black text-brand-primary uppercase tracking-[0.8em] animate-pulse block">{isAr ? 'تخليق المسار الأيضي...' : 'SYNTHESIZING_BLUEPRINT'}</span>
-                       <p className="text-[9px] text-white/30 uppercase tracking-widest">{isAr ? 'معايرة البيانات لبروتوكول' : 'CALIBRATING FOR'} {currentPersona}</p>
+                       <p className="text-[9px] text-white/30 uppercase tracking-widest leading-relaxed">{isAr ? 'معايرة البيانات لبروتوكول' : 'CALIBRATING FOR'} {currentPersona}</p>
                     </div>
                   </div>
+                ) : error ? (
+                   <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center space-y-8 animate-fade-in bg-red-500/[0.02]">
+                     <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center text-red-500">
+                        <AlertCircle size={40} />
+                     </div>
+                     <div className="space-y-3">
+                        <h4 className="text-2xl font-serif font-bold text-red-500 italic">{isAr ? 'فشل في الاتصال العصبي' : 'Neural Link Fault'}</h4>
+                        <p className="text-brand-dark/50 dark:text-white/40 text-sm max-w-xs mx-auto leading-relaxed">{error}</p>
+                     </div>
+                     <button 
+                        onClick={() => selectedGoal && handleGenerate(selectedGoal)}
+                        className="px-8 py-4 bg-brand-dark dark:bg-white/10 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary transition-all flex items-center gap-3"
+                      >
+                        <RefreshCw size={14} /> {isAr ? 'إعادة المحاولة' : 'RETRY SYNTHESIS'}
+                      </button>
+                   </div>
                 ) : result ? (
                   <div className="flex flex-col h-full animate-fade-in text-brand-dark dark:text-white">
                     <div className="p-10 border-b border-brand-dark/[0.03] dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
