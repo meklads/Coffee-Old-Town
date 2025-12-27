@@ -2,12 +2,14 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { UserHealthProfile, MealAnalysisResult, MealPlanRequest, DayPlan, FeedbackEntry } from '../types.ts';
 
-// تهيئة العميل مباشرة باستخدام المفتاح من بيئة التشغيل
+// تهيئة العميل مع معالجة الأخطاء لبيئة Vercel
 const getAI = () => {
-  if (!process.env.API_KEY) {
+  const key = process.env.API_KEY;
+  if (!key || key === 'undefined' || key === '') {
+    console.error("CRITICAL: API_KEY is missing in the current environment.");
     throw new Error("MISSING_KEY");
   }
-  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+  return new GoogleGenAI({ apiKey: key });
 };
 
 export const analyzeMealImage = async (base64Image: string, profile: UserHealthProfile, lang: string = 'en'): Promise<MealAnalysisResult | null> => {
@@ -72,7 +74,7 @@ export const analyzeMealImage = async (base64Image: string, profile: UserHealthP
     return JSON.parse(resultText.trim());
   } catch (error: any) {
     console.error("Analysis Error:", error);
-    if (error.message === "MISSING_KEY") throw new Error("MISSING_KEY");
+    if (error.message === "MISSING_KEY" || error.message?.includes("key")) throw new Error("MISSING_KEY");
     throw error;
   }
 };

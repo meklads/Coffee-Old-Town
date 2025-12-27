@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { RotateCcw, Baby, HeartPulse, Zap, Camera, Utensils, Share2, Activity, Sparkles, AlertCircle, RefreshCw, UploadCloud, FileSearch, Check } from 'lucide-react';
+import { RotateCcw, Baby, HeartPulse, Zap, Camera, Utensils, Share2, Activity, Sparkles, AlertCircle, RefreshCw, UploadCloud, FileSearch, Check, Copy } from 'lucide-react';
 import { SectionId, BioPersona } from '../types.ts';
 import { useApp } from '../context/AppContext.tsx';
 import { analyzeMealImage } from '../services/geminiService.ts';
@@ -66,9 +66,9 @@ const Hero: React.FC = () => {
   };
 
   useEffect(() => {
+    // نمنع تصفير النتائج عند تغيير البروتوكول للسماح للمستخدم بالمقارنة
     if (status === 'success') {
-      setStatus('idle');
-      setLastAnalysisResult(null);
+      setShareStatus('idle');
     }
   }, [currentPersona]);
 
@@ -123,12 +123,12 @@ const Hero: React.FC = () => {
       if (err.message === "MISSING_KEY") {
         setErrorMsg({
           title: isAr ? "خطأ في الاتصال" : "Connection Error",
-          detail: isAr ? "مفتاح الـ API غير متصل بالنظام. يرجى تزويد مفتاح صالح." : "The API key is missing or invalid. Please check your credentials."
+          detail: isAr ? "مفتاح الـ API غير متصل بالنظام في Vercel. تأكد من عمل Deploy جديد بعد إضافة المفتاح." : "The API key is missing in Vercel. Ensure you redeploy after adding the key in project settings."
         });
       } else {
         setErrorMsg({
           title: isAr ? "فشل المسح الضوئي" : "Scan Synthesis Failed",
-          detail: isAr ? "لم نتمكن من تحليل العينة. قد تكون الصورة غير واضحة أو خالية من المكونات الغذائية." : "Unable to analyze specimen. The image may be too blurry or lacks identifiable nutrients."
+          detail: isAr ? "لم نتمكن من تحليل العينة. قد تكون الصورة غير واضحة." : "Unable to analyze specimen. The image may be too blurry."
         });
       }
     }
@@ -138,8 +138,8 @@ const Hero: React.FC = () => {
     if (!lastAnalysisResult) return;
 
     const shareText = isAr 
-      ? `نتائج فحص الوجبة من مختبر أولد تاون:\n📊 الملخص: ${lastAnalysisResult.summary}\n🔥 السعرات: ${lastAnalysisResult.totalCalories}\n💡 نصيحة الخبير: ${lastAnalysisResult.personalizedAdvice}`
-      : `Meal Analysis Result from Old Town Lab:\n📊 Summary: ${lastAnalysisResult.summary}\n🔥 Calories: ${lastAnalysisResult.totalCalories}\n💡 Expert Advice: ${lastAnalysisResult.personalizedAdvice}`;
+      ? `📊 تقرير التغذية الذكي:\n📝 الملخص: ${lastAnalysisResult.summary}\n🔥 السعرات: ${lastAnalysisResult.totalCalories} سعرة\n💡 النصيحة: ${lastAnalysisResult.personalizedAdvice}\n\nتم التحليل بواسطة كوفي أولد تاون.`
+      : `📊 Smart Nutrition Report:\n📝 Summary: ${lastAnalysisResult.summary}\n🔥 Calories: ${lastAnalysisResult.totalCalories} kcal\n💡 Advice: ${lastAnalysisResult.personalizedAdvice}\n\nAnalyzed by Coffee Old Town Lab.`;
 
     if (navigator.share) {
       try {
@@ -149,18 +149,25 @@ const Hero: React.FC = () => {
           url: window.location.href,
         });
         setShareStatus('shared');
-      } catch (err) {
-        console.log('Share canceled or failed', err);
-      }
-    } else {
-      // Fallback to Clipboard
-      try {
-        await navigator.clipboard.writeText(shareText);
-        setShareStatus('shared');
         setTimeout(() => setShareStatus('idle'), 3000);
       } catch (err) {
-        setShareStatus('error');
+        // إذا ألغى المستخدم المشاركة، لا نفعل شيئاً
+        if ((err as Error).name !== 'AbortError') {
+          copyToClipboard(shareText);
+        }
       }
+    } else {
+      copyToClipboard(shareText);
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setShareStatus('shared');
+      setTimeout(() => setShareStatus('idle'), 3000);
+    } catch (err) {
+      setShareStatus('error');
     }
   };
 
@@ -363,10 +370,10 @@ const Hero: React.FC = () => {
                             <button 
                               onClick={handleShare}
                               className={`flex-1 py-4 lg:py-5 transition-all rounded-2xl lg:rounded-[25px] flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest border border-white/5 
-                                ${shareStatus === 'shared' ? 'bg-emerald-500/20 text-emerald-500 border-emerald-500/50' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                                ${shareStatus === 'shared' ? 'bg-emerald-500 text-brand-dark border-emerald-500 shadow-glow' : 'bg-white/5 hover:bg-white/10 text-white'}`}
                             >
-                               {shareStatus === 'shared' ? <Check size={14} /> : <Share2 size={14} />}
-                               {shareStatus === 'shared' ? (isAr ? 'تم النسخ/المشاركة' : 'SHARED/COPIED') : (isAr ? 'مشاركة' : 'SHARE')}
+                               {shareStatus === 'shared' ? <Check size={14} /> : (navigator.share ? <Share2 size={14} /> : <Copy size={14} />)}
+                               {shareStatus === 'shared' ? (isAr ? 'تم النسخ' : 'COPIED') : (isAr ? 'مشاركة' : 'SHARE')}
                             </button>
                          </div>
                       </div>
