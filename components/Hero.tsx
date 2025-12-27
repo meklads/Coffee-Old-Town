@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { RotateCcw, Baby, HeartPulse, Zap, Camera, Utensils, Share2, AlertTriangle, Info, Download, FileText, RefreshCw } from 'lucide-react';
+import { RotateCcw, Baby, HeartPulse, Zap, Camera, Utensils, Share2, AlertTriangle, Info, Download, FileText, RefreshCw, Activity, PieChart, Sparkles } from 'lucide-react';
 import { SectionId, BioPersona } from '../types.ts';
 import { useApp } from '../context/AppContext.tsx';
 import { analyzeMealImage } from '../services/geminiService.ts';
@@ -11,17 +11,19 @@ const Hero: React.FC = () => {
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
   const [progress, setProgress] = useState(0);
   const [loadingStep, setLoadingStep] = useState('');
+  const [showScoreInfo, setShowScoreInfo] = useState(false);
   
   const isAr = language === 'ar';
   const fileInputRef = useRef<HTMLInputElement>(null);
   const progressIntervalRef = useRef<number | null>(null);
 
-  const personaConfigs: Record<BioPersona, { label: string, icon: React.ReactNode, slogan: string, color: string, glow: string, border: string }> = {
+  const personaConfigs: Record<BioPersona, { label: string, icon: React.ReactNode, slogan: string, color: string, glow: string, border: string, accent: string }> = {
     GENERAL: { 
       label: isAr ? 'عام' : 'GENERAL', 
       icon: <Utensils size={14} />, 
       slogan: isAr ? 'يومي' : 'Daily',
       color: 'bg-[#C2A36B]',
+      accent: 'text-[#C2A36B]',
       glow: 'shadow-[0_0_20px_rgba(194,163,107,0.4)]',
       border: 'border-[#C2A36B]'
     },
@@ -30,6 +32,7 @@ const Hero: React.FC = () => {
       icon: <Baby size={14} />, 
       slogan: isAr ? 'نمو' : 'Growth',
       color: 'bg-[#E5C1CD]',
+      accent: 'text-[#E5C1CD]',
       glow: 'shadow-[0_0_20px_rgba(229,193,205,0.4)]',
       border: 'border-[#E5C1CD]'
     },
@@ -38,6 +41,7 @@ const Hero: React.FC = () => {
       icon: <HeartPulse size={14} />, 
       slogan: isAr ? 'توازن' : 'Sync',
       color: 'bg-[#64B5F6]',
+      accent: 'text-[#64B5F6]',
       glow: 'shadow-[0_0_20px_rgba(100,181,246,0.4)]',
       border: 'border-[#64B5F6]'
     },
@@ -46,6 +50,7 @@ const Hero: React.FC = () => {
       icon: <Zap size={14} />, 
       slogan: isAr ? 'أداء' : 'Power',
       color: 'bg-[#FF7043]',
+      accent: 'text-[#FF7043]',
       glow: 'shadow-[0_0_20px_rgba(255,112,67,0.4)]',
       border: 'border-[#FF7043]'
     }
@@ -130,7 +135,7 @@ const Hero: React.FC = () => {
     <section id={SectionId.PHASE_01_SCAN} className="relative h-screen bg-brand-dark flex items-center justify-center overflow-hidden pt-16 lg:pt-0">
       <div className="max-w-7xl mx-auto px-4 lg:px-6 w-full h-full flex flex-col lg:flex-row lg:items-center lg:gap-20">
         
-        {/* المحتوى النصي (العنوان) - يتصدر المشهد في الجوال */}
+        {/* المحتوى النصي (العنوان) */}
         <div className="lg:w-[45%] flex flex-col justify-start lg:justify-center py-4 lg:py-6 animate-fade-in z-20 space-y-4 lg:space-y-12">
           
           <div className="space-y-2 lg:space-y-6">
@@ -141,7 +146,7 @@ const Hero: React.FC = () => {
             
             <div className="space-y-1 lg:space-y-4 text-center lg:text-left">
               <h1 className="text-3xl md:text-5xl lg:text-8xl font-serif font-bold text-white leading-tight lg:leading-[0.85] tracking-tighter">
-                Precision <span className={`italic font-normal transition-colors duration-1000 ${currentPersona === 'GENERAL' ? 'text-brand-primary' : activeConfig.color.replace('bg-', 'text-')}`}>Biometrics.</span>
+                Precision <span className={`italic font-normal transition-colors duration-1000 ${currentPersona === 'GENERAL' ? 'text-brand-primary' : activeConfig.accent}`}>Biometrics.</span>
               </h1>
               <p className="hidden lg:block text-white/30 text-base italic max-w-sm leading-relaxed">
                 {isAr ? 'اختر البروتوكول لتعديل مخرجات التحليل الجزيئي.' : 'Select protocol to calibrate molecular diagnostic output.'}
@@ -149,7 +154,7 @@ const Hero: React.FC = () => {
             </div>
           </div>
 
-          {/* أزرار البروتوكول في نسخة الديسك توب تظهر هنا */}
+          {/* أزرار البروتوكول (Desktop) */}
           <div className="hidden lg:grid grid-cols-2 gap-4 max-w-md">
             {(Object.keys(personaConfigs) as BioPersona[]).map((id) => {
               const p = personaConfigs[id];
@@ -177,9 +182,9 @@ const Hero: React.FC = () => {
           </div>
         </div>
         
-        {/* السكانر الاحترافي - العنصر المركزي */}
+        {/* السكانر الاحترافي */}
         <div className="flex-1 lg:flex-none lg:w-[55%] w-full flex flex-col items-center lg:items-end justify-center relative z-10 px-2 lg:px-0">
-           <div className={`w-full max-w-[420px] lg:max-w-[480px] aspect-[4/5] bg-[#0A0908] rounded-[40px] lg:rounded-[60px] border transition-all duration-1000 ${activeConfig.border.replace('border-', 'border-')} shadow-[0_40px_80px_-20px_rgba(0,0,0,1)] flex flex-col relative overflow-hidden group`}>
+           <div className={`w-full max-w-[420px] lg:max-w-[480px] aspect-[4/5] bg-[#0A0908] rounded-[40px] lg:rounded-[60px] border transition-all duration-1000 ${activeConfig.border} shadow-[0_40px_80px_-20px_rgba(0,0,0,1)] flex flex-col relative overflow-hidden group`}>
               
               <div className="flex-1 m-2 lg:m-4 rounded-[30px] lg:rounded-[45px] bg-[#050505] overflow-hidden flex flex-col border border-white/5">
                  
@@ -190,7 +195,7 @@ const Hero: React.FC = () => {
                          {status === 'loading' ? (isAr ? 'جاري الفحص...' : 'SCANNING') : 'Interface_v5'}
                        </span>
                     </div>
-                    {image && (
+                    {(image || lastAnalysisResult) && (
                       <button onClick={() => { setImage(null); setStatus('idle'); setLastAnalysisResult(null); }} className="text-white/10 hover:text-brand-primary transition-all">
                          <RotateCcw size={12} />
                       </button>
@@ -200,13 +205,13 @@ const Hero: React.FC = () => {
                  <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth p-4 lg:p-8 flex flex-col justify-center">
                     {status === 'idle' && !image ? (
                       <div onClick={() => fileInputRef.current?.click()} className="h-full flex flex-col items-center justify-center text-center space-y-6 lg:space-y-8 cursor-pointer group/up py-4">
-                         <div className={`w-14 h-14 lg:w-20 lg:h-20 bg-white/5 border border-dashed border-white/10 rounded-full flex items-center justify-center transition-all duration-700 group-hover/up:${activeConfig.color.replace('bg-', 'border-')} group-hover/up:${activeConfig.color.replace('bg-', 'text-')}`}>
+                         <div className={`w-14 h-14 lg:w-20 lg:h-20 bg-white/5 border border-dashed border-white/10 rounded-full flex items-center justify-center transition-all duration-700 group-hover/up:${activeConfig.border} group-hover/up:${activeConfig.accent}`}>
                             <Camera size={24} className="lg:hidden" strokeWidth={1} />
                             <Camera size={32} className="hidden lg:block" strokeWidth={1} />
                          </div>
                          <div className="space-y-2">
                             <h4 className="text-lg lg:text-2xl font-serif font-bold italic text-white/60 tracking-tight">{isAr ? 'تلقيم العينة' : 'Insert Specimen'}</h4>
-                            <p className={`text-[8px] lg:text-[9px] font-black uppercase tracking-[0.6em] transition-colors duration-1000 ${activeConfig.color.replace('bg-', 'text-')}`}>{isAr ? 'اضغط للبدء' : 'SCAN SAMPLE'}</p>
+                            <p className={`text-[8px] lg:text-[9px] font-black uppercase tracking-[0.6em] transition-colors duration-1000 ${activeConfig.accent}`}>{isAr ? 'اضغط للبدء' : 'SCAN SAMPLE'}</p>
                          </div>
                       </div>
                     ) : status === 'idle' && image ? (
@@ -227,39 +232,79 @@ const Hero: React.FC = () => {
                          <div className="relative w-24 h-24 lg:w-40 lg:h-40">
                             <svg className="w-full h-full -rotate-90">
                                <circle cx="50%" cy="50%" r="45%" stroke="currentColor" strokeWidth="1" fill="transparent" className="text-white/5" />
-                               <circle cx="50%" cy="50%" r="45%" stroke="currentColor" strokeWidth="6" lg:strokeWidth="8" fill="transparent" strokeDasharray="283" strokeDashoffset={283 - (283 * progress / 100)} className={`transition-all duration-500 ${activeConfig.color.replace('bg-', 'text-')}`} />
+                               <circle cx="50%" cy="50%" r="45%" stroke="currentColor" strokeWidth="6" lg:strokeWidth="8" fill="transparent" strokeDasharray="283" strokeDashoffset={283 - (283 * progress / 100)} className={`transition-all duration-500 ${activeConfig.accent}`} />
                             </svg>
                             <div className="absolute inset-0 flex items-center justify-center font-sans font-bold text-2xl lg:text-4xl text-white">{progress}%</div>
                          </div>
-                         <h3 className={`font-black uppercase tracking-[0.5em] animate-pulse text-[8px] lg:text-[9px] transition-colors duration-1000 ${activeConfig.color.replace('bg-', 'text-')}`}>{loadingStep}</h3>
+                         <h3 className={`font-black uppercase tracking-[0.5em] animate-pulse text-[8px] lg:text-[9px] transition-colors duration-1000 ${activeConfig.accent}`}>{loadingStep}</h3>
                       </div>
                     ) : status === 'success' && lastAnalysisResult ? (
-                      <div className="w-full space-y-4 lg:space-y-8 animate-fade-in py-2">
-                         <div className="space-y-1 lg:space-y-3">
+                      <div className="w-full space-y-4 lg:space-y-6 animate-fade-in py-2 overflow-y-auto no-scrollbar">
+                         {/* Header Result */}
+                         <div className="space-y-1 lg:space-y-2 translate-y-4 animate-fade-in [animation-fill-mode:forwards]">
                             <div className="flex items-center gap-2">
-                              <span className={`text-[7px] lg:text-[8px] font-black uppercase tracking-widest transition-colors duration-1000 ${activeConfig.color.replace('bg-', 'text-')}`}>{isAr ? 'التقرير الأيضي' : 'BIO-REPORT'}</span>
+                              <span className={`text-[7px] lg:text-[8px] font-black uppercase tracking-widest transition-colors duration-1000 ${activeConfig.accent}`}>{isAr ? 'التقرير الأيضي' : 'BIO-REPORT'}</span>
                             </div>
                             <h2 className="text-sm lg:text-xl font-sans font-bold text-white tracking-tight leading-snug">{lastAnalysisResult.summary}</h2>
                          </div>
                          
-                         <div className="grid grid-cols-2 gap-2 lg:gap-4">
-                            <div className="bg-white/5 p-3 lg:p-5 rounded-[20px] lg:rounded-[30px] border border-white/5">
-                               <span className="text-[6px] lg:text-[7px] font-black uppercase text-white/30 block mb-1 lg:mb-2 tracking-widest">KCAL</span>
+                         {/* Dynamic Stats Grid */}
+                         <div className="grid grid-cols-2 gap-2 lg:gap-4 translate-y-4 animate-fade-in [animation-delay:200ms] [animation-fill-mode:forwards]">
+                            <div className="bg-white/5 p-3 lg:p-5 rounded-[20px] lg:rounded-[30px] border border-white/5 group hover:bg-white/[0.08] transition-all">
+                               <span className="text-[6px] lg:text-[7px] font-black uppercase text-white/30 block mb-1 lg:mb-2 tracking-widest flex items-center gap-1">
+                                 KCAL <Activity size={8} />
+                               </span>
                                <div className="text-xl lg:text-3xl font-sans font-bold text-white tracking-tighter">{lastAnalysisResult.totalCalories}</div>
                             </div>
-                            <div className="bg-white/5 p-3 lg:p-5 rounded-[20px] lg:rounded-[30px] border border-white/5">
-                               <span className="text-[6px] lg:text-[7px] font-black uppercase text-white/30 block mb-1 lg:mb-2 tracking-widest">SCORE</span>
-                               <div className="text-xl lg:text-3xl font-sans font-bold text-white tracking-tighter">{lastAnalysisResult.healthScore}%</div>
+                            
+                            {/* Interactive Health Score Badge */}
+                            <div 
+                              className="relative bg-white/5 p-3 lg:p-5 rounded-[20px] lg:rounded-[30px] border border-white/5 group cursor-help hover:bg-white/[0.08] transition-all"
+                              onMouseEnter={() => setShowScoreInfo(true)}
+                              onMouseLeave={() => setShowScoreInfo(false)}
+                              onClick={() => setShowScoreInfo(!showScoreInfo)}
+                            >
+                               <div className="flex justify-between items-start mb-1 lg:mb-2">
+                                  <span className="text-[6px] lg:text-[7px] font-black uppercase text-white/30 tracking-widest flex items-center gap-1">
+                                    SCORE <Info size={8} className={`${activeConfig.accent}`} />
+                                  </span>
+                               </div>
+                               <div className="text-xl lg:text-3xl font-sans font-bold text-white tracking-tighter flex items-center gap-2">
+                                 {lastAnalysisResult.healthScore}%
+                                 <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${lastAnalysisResult.healthScore > 70 ? 'bg-emerald-500' : 'bg-brand-primary'}`} />
+                               </div>
+
+                               {/* Interactive Diagnostic Tooltip */}
+                               {showScoreInfo && (
+                                 <div className="absolute bottom-full left-0 right-0 mb-3 z-50 animate-fade-in">
+                                    <div className="bg-[#1A1A1A] border border-white/10 p-4 rounded-2xl shadow-4xl backdrop-blur-xl">
+                                       <span className="text-[6px] font-black uppercase tracking-[0.4em] text-brand-primary block mb-2">{isAr ? 'معايرة النقاط' : 'SCORE_CALIBRATION'}</span>
+                                       <p className="text-[9px] text-white/60 leading-relaxed italic">
+                                         {isAr 
+                                           ? `تم حساب هذه النتيجة بناءً على كثافة العناصر الغذائية وتأثير الجلوكوز لبروتوكول ${currentPersona}.` 
+                                           : `Calculated synthesis of nutrient density & glycemic impact calibrated for the ${currentPersona} protocol.`}
+                                       </p>
+                                       <div className="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
+                                          <div className={`h-full ${activeConfig.color} transition-all duration-1000`} style={{ width: `${lastAnalysisResult.healthScore}%` }} />
+                                       </div>
+                                    </div>
+                                 </div>
+                               )}
                             </div>
                          </div>
 
-                         <div className={`p-4 lg:p-6 bg-white/5 border border-white/10 rounded-[25px] lg:rounded-[35px] relative overflow-hidden`}>
+                         {/* Advice Section */}
+                         <div className={`p-4 lg:p-6 bg-white/5 border border-white/10 rounded-[25px] lg:rounded-[35px] relative overflow-hidden translate-y-4 animate-fade-in [animation-delay:400ms] [animation-fill-mode:forwards] group hover:border-brand-primary/20 transition-all`}>
+                            <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-100 transition-opacity">
+                               <Sparkles size={12} className={activeConfig.accent} />
+                            </div>
                             <p className="text-white/70 text-[10px] lg:text-xs font-sans italic leading-relaxed">"{lastAnalysisResult.personalizedAdvice}"</p>
                          </div>
 
-                         <div className="flex gap-2 pt-2">
-                            <button className={`flex-1 py-4 bg-white/5 hover:${activeConfig.color} hover:text-brand-dark transition-all rounded-[15px] lg:rounded-[25px] flex items-center justify-center gap-2 text-[8px] font-black uppercase tracking-widest text-white border border-white/5`}>
-                               <Share2 size={12} /> {isAr ? 'مشاركة' : 'SHARE'}
+                         {/* Action Buttons */}
+                         <div className="flex gap-2 pt-2 translate-y-4 animate-fade-in [animation-delay:600ms] [animation-fill-mode:forwards]">
+                            <button className={`flex-1 py-4 bg-white/5 hover:${activeConfig.color} hover:text-brand-dark transition-all rounded-[15px] lg:rounded-[25px] flex items-center justify-center gap-2 text-[8px] font-black uppercase tracking-widest text-white border border-white/5 group`}>
+                               <Share2 size={12} className="group-hover:scale-110 transition-transform" /> {isAr ? 'مشاركة' : 'SHARE REPORT'}
                             </button>
                          </div>
                       </div>
@@ -276,7 +321,7 @@ const Hero: React.FC = () => {
            </div>
         </div>
 
-        {/* أزرار البروتوكول في نسخة الجوال تظهر في الأسفل بنمط مدمج جداً */}
+        {/* أزرار البروتوكول (Mobile) */}
         <div className="lg:hidden w-full pb-6 pt-2 z-20">
            <div className="grid grid-cols-4 gap-2">
               {(Object.keys(personaConfigs) as BioPersona[]).map((id) => {

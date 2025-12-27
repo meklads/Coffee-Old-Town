@@ -5,12 +5,12 @@ export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
   const { prompt } = req.body;
-  const apiKey = process.env.API_KEY;
 
-  if (!apiKey) return res.status(500).json({ error: 'SERVER_KEY_MISSING' });
+  // Fixed: Always use process.env.API_KEY directly for initialization as per @google/genai guidelines.
+  if (!process.env.API_KEY) return res.status(500).json({ error: 'SERVER_KEY_MISSING' });
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: {

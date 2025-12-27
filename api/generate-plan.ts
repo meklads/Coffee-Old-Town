@@ -63,12 +63,12 @@ export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
   const { request, lang, feedback } = req.body;
-  const apiKey = process.env.API_KEY;
 
-  if (!apiKey) return res.status(500).json({ error: 'SYSTEM_FAULT: API key missing.' });
+  // Fixed: Always use process.env.API_KEY directly for initialization as per @google/genai guidelines.
+  if (!process.env.API_KEY) return res.status(500).json({ error: 'SYSTEM_FAULT: API key missing.' });
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
     const persona = request.persona || 'GENERAL';
     const goal = request.goal;
@@ -88,7 +88,8 @@ export default async function handler(req: any, res: any) {
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
-      contents: [{ parts: [{ text: prompt }] }],
+      // Fixed: Passing string directly to contents is cleaner and matches guidelines.
+      contents: prompt,
       config: { 
         responseMimeType: "application/json",
         responseSchema: dayPlanSchema,

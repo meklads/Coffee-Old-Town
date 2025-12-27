@@ -64,14 +64,14 @@ export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { image, profile, lang } = req.body;
-  const apiKey = process.env.API_KEY;
 
-  if (!apiKey) {
+  // Fixed: Always use process.env.API_KEY directly for initialization as per @google/genai guidelines.
+  if (!process.env.API_KEY) {
     return res.status(500).json({ error: 'SYSTEM_FAULT: API key missing.' });
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const base64Data = image.includes(',') ? image.split(',')[1] : image;
     const persona = profile?.persona || 'GENERAL';
 
