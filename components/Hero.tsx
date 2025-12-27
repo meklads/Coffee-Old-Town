@@ -51,7 +51,6 @@ const Hero: React.FC = () => {
     }, 200);
 
     try {
-      // تمرير اللغة الحالية هنا
       const result = await analyzeMealImage(image, {
         chronicDiseases: "none",
         dietProgram: "general",
@@ -75,8 +74,10 @@ const Hero: React.FC = () => {
       
       if (err.message === "QUOTA_EXCEEDED") {
         setErrorMessage(isAr ? "عذراً، وصل النظام إلى حده الأقصى حالياً. يرجى المحاولة لاحقاً." : "System limit reached. Please try again later.");
+      } else if (err.message === "MISSING_KEY") {
+        setErrorMessage(isAr ? "خطأ في التكوين: مفتاح API غير متوفر في الخادم." : "Configuration Error: API Key not found on server.");
       } else {
-        setErrorMessage(isAr ? "حدث خطأ غير متوقع في التشخيص." : "Unexpected diagnostic fault.");
+        setErrorMessage(isAr ? "حدث خطأ في الاتصال بالخادم. يرجى التأكد من إعدادات Vercel." : "Server communication error. Check Vercel settings.");
       }
     }
   };
@@ -89,11 +90,28 @@ const Hero: React.FC = () => {
         setErrorMessage(isAr ? "يرجى اختيار صورة." : "Select an image.");
         return;
       }
+      // تقليل حجم الصورة لضمان استقرار الطلب في Vercel
       const reader = new FileReader();
       reader.onloadend = () => { 
-        setImage(reader.result as string); 
-        setStatus('idle'); 
-        setProgress(0);
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 800;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+             if (w > h) { h = (h * maxDim) / w; w = maxDim; }
+             else { w = (w * maxDim) / h; h = maxDim; }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, w, h);
+          setImage(canvas.toDataURL('image/jpeg', 0.7)); 
+          setStatus('idle'); 
+          setProgress(0);
+        };
+        img.src = reader.result as string;
       };
       reader.readAsDataURL(file);
     }

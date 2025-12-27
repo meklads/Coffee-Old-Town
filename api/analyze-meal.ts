@@ -38,8 +38,7 @@ const mealAnalysisSchema = {
     summary: { type: Type.STRING },
     personalizedAdvice: {
       type: Type.ARRAY,
-      items: { type: Type.STRING },
-      description: "List of concise, bullet-point advice based on the analysis."
+      items: { type: Type.STRING }
     },
     warnings: {
       type: Type.ARRAY,
@@ -47,22 +46,11 @@ const mealAnalysisSchema = {
         type: Type.OBJECT,
         properties: {
           text: { type: Type.STRING },
-          riskLevel: { 
-            type: Type.STRING, 
-            description: "One of: 'low', 'medium', 'high'" 
-          },
-          type: {
-            type: Type.STRING,
-            description: "Category: 'sugar', 'sodium', 'pregnancy', 'allergy', 'general'"
-          }
+          riskLevel: { type: Type.STRING },
+          type: { type: Type.STRING }
         },
         required: ["text", "riskLevel", "type"]
-      },
-      description: "Critical warnings specific to the user persona."
-    },
-    scientificSource: {
-      type: Type.STRING,
-      description: "A mention of a general scientific guideline (e.g., 'Based on WHO guidelines' or 'AHA standards')."
+      }
     }
   },
   required: ["ingredients", "totalCalories", "healthScore", "macros", "summary", "personalizedAdvice", "warnings"]
@@ -76,7 +64,7 @@ export default async function handler(req: any, res: any) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { image, profile } = req.body;
+  const { image, profile, lang } = req.body;
   const apiKey = process.env.API_KEY;
 
   if (!apiKey) {
@@ -90,21 +78,23 @@ export default async function handler(req: any, res: any) {
 
     let personaContext = "";
     if (persona === 'PREGNANCY') {
-      personaContext = "The user is PREGNANT. Prioritize Folic Acid, Iron, Vitamin D. Explicitly warn about: Unpasteurized cheese, high mercury fish, raw sprouts, undercooked meat, high caffeine.";
+      personaContext = "The user is PREGNANT. Focus on safety and essential nutrients.";
     } else if (persona === 'DIABETIC') {
-      personaContext = "The user has DIABETES. Focus on Glycemic Load, complex carbs, and fiber. Warn about hidden sugars and high-GI ingredients.";
+      personaContext = "The user has DIABETES. Focus on Glycemic Load and sugars.";
     } else if (persona === 'ATHLETE') {
-      personaContext = "The user is an ATHLETE. Focus on Protein synthesis, electrolyte balance, and glycogen replenishment.";
+      personaContext = "The user is an ATHLETE. Focus on Protein and energy.";
     }
+
+    const languageInstruction = lang === 'ar' 
+      ? "Response must be entirely in Arabic (العربية)." 
+      : "Response must be entirely in English.";
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: {
         parts: [
           { inlineData: { data: base64Data, mimeType: 'image/jpeg' } },
-          { text: `Deep clinical analysis. User Path: ${persona}. ${personaContext}
-                  Return JSON conforming to schema. Provide 'personalizedAdvice' as an array of short strings.
-                  Categorize each warning and assign a 'riskLevel' (low, medium, high).` }
+          { text: `Scientific clinical analysis for ${persona}. ${personaContext} Analyze meal and return JSON. ${languageInstruction}` }
         ]
       },
       config: { 
