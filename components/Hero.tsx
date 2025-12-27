@@ -80,24 +80,28 @@ const Hero: React.FC = () => {
 
   const handleConnectPersonalKey = async () => {
     const aistudio = (window as any).aistudio;
+    setIsConnectingKey(true);
+    
     if (aistudio && typeof aistudio.openSelectKey === 'function') {
       try {
-        setIsConnectingKey(true);
         await aistudio.openSelectKey();
+        // نفترض النجاح للبدء فوراً وتفادي race conditions
         setTimeout(() => handleReset(), 500);
       } catch (e) {
-        console.error("Key selection failed", e);
         setIsConnectingKey(false);
       }
     } else {
-      // بدلاً من الـ alert، نقوم بتحديث رسالة الخطأ لتشرح الوضع للمستخدم
-      setErrorMsg({
-        title: isAr ? "نظام المفاتيح الشخصية" : "Personal Key System",
-        detail: isAr 
-          ? "ميزة ربط المفاتيح تعمل حصرياً داخل بيئة AI Studio. لتجاوز الحد على هذا الرابط، يرجى المحاولة لاحقاً أو مراجعة إعدادات الموقع."
-          : "Key linking only works within the AI Studio environment. To bypass the limit here, please try again later or contact the administrator.",
-        type: 'info'
-      });
+      // إذا كان خارج البيئة، ننتظر قليلاً ثم نعطي خيار المحاولة العادية
+      setTimeout(() => {
+        setIsConnectingKey(false);
+        setErrorMsg({
+          title: isAr ? "نظام الاستجابة المحدود" : "Limited Response System",
+          detail: isAr 
+            ? "الطلب حالياً مرتفع جداً. يرجى المحاولة مرة أخرى بعد قليل أو مراجعة إعدادات المختبر."
+            : "Traffic is exceptionally high. Please attempt again in a few moments or review lab settings.",
+          type: 'info'
+        });
+      }, 1000);
     }
   };
 
@@ -116,7 +120,7 @@ const Hero: React.FC = () => {
 
     progressIntervalRef.current = window.setInterval(() => {
       setProgress(prev => {
-        const next = prev + Math.floor(Math.random() * 3) + 1;
+        const next = prev + Math.floor(Math.random() * 4) + 1;
         if (next >= 99) return 99;
         const stepIdx = Math.floor((next / 100) * steps.length);
         if (stepIdx !== currentStepIdx && stepIdx < steps.length) {
@@ -125,7 +129,7 @@ const Hero: React.FC = () => {
         }
         return next;
       });
-    }, 150);
+    }, 120);
 
     try {
       const result = await analyzeMealImage(image, {
@@ -158,22 +162,18 @@ const Hero: React.FC = () => {
                            errorStr.includes("429") || 
                            errorStr.includes("EXHAUSTED");
       
-      const isMissingKey = errorStr.includes("MISSING_KEY");
-      
       if (isQuotaError) {
         setErrorMsg({
           title: isAr ? "تحجيم الأداء الأيضي" : "Metabolic Throttling",
           detail: isAr 
-            ? "وصل المختبر العام للحد الأقصى اليومي من الطلبات المجانية. الميزة مقيدة حالياً للحفاظ على استقرار النظام."
-            : "The shared lab reached its daily free request limit. Features are temporarily throttled for system stability.",
+            ? "لقد وصل المختبر العام للحد الأقصى اليومي. للحصول على أداء فوري وغير محدود، يرجى ربط مفتاحك الخاص."
+            : "The shared lab reached its daily limit. For instant and unlimited performance, please connect your personal key.",
           type: 'quota'
         });
       } else {
         setErrorMsg({
-          title: isAr ? (isMissingKey ? "خطأ في المفتاح" : "فشل التحليل") : (isMissingKey ? "API Key Issue" : "Analysis Failed"),
-          detail: isAr 
-            ? (isMissingKey ? "مفتاح API غير مفعّل في إعدادات السيرفر." : `خطأ في المعالجة البيومترية: ${err.message}`)
-            : (isMissingKey ? "API Key is not configured in Server settings." : `Biometric processing error: ${err.message}`),
+          title: isAr ? "فشل التحليل البيومتري" : "Biometric Scan Failed",
+          detail: isAr ? `خطأ في المعالجة: ${err.message}` : `Processing error: ${err.message}`,
           type: 'general'
         });
       }
@@ -213,7 +213,7 @@ const Hero: React.FC = () => {
           setImage(reader.result as string);
           setStatus('idle'); 
           setProgress(0);
-        }, 800);
+        }, 600);
       };
       reader.readAsDataURL(file);
     }
@@ -332,34 +332,19 @@ const Hero: React.FC = () => {
                          </div>
                          
                          <div className="flex flex-col gap-3 w-full">
-                            {(errorMsg.type === 'quota' || errorMsg.type === 'info') ? (
-                              <button 
-                                onClick={handleConnectPersonalKey} 
-                                disabled={isConnectingKey}
-                                className="w-full py-5 bg-brand-primary text-brand-dark rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] shadow-glow flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-70"
-                              >
-                                 {isConnectingKey ? <Loader2 size={14} className="animate-spin" /> : <Key size={14} />} 
-                                 {isAr ? 'حاول مجدداً أو اربط مفتاحك' : 'RETRY OR CONNECT KEY'}
-                              </button>
-                            ) : null}
+                            <button 
+                              onClick={handleConnectPersonalKey} 
+                              disabled={isConnectingKey}
+                              className={`w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] shadow-glow flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-70
+                                ${errorMsg.type === 'quota' ? 'bg-brand-primary text-brand-dark' : 'bg-white/10 text-white'}`}
+                            >
+                               {isConnectingKey ? <Loader2 size={14} className="animate-spin" /> : <Key size={14} />} 
+                               {isAr ? 'استخدام مفتاحك الشخصي' : 'USE PERSONAL KEY'}
+                            </button>
                             <button onClick={handleReset} className={`w-full py-5 bg-white/5 text-white rounded-2xl text-[9px] font-black uppercase tracking-[0.4em] border transition-all hover:bg-white/10 ${errorMsg.type === 'general' ? 'border-red-500/20' : 'border-brand-primary/20'}`}>
-                               {isAr ? 'إلغاء والعودة' : 'CANCEL & GO BACK'}
+                               {isAr ? 'المحاولة مجدداً' : 'RETRY SCAN'}
                             </button>
                          </div>
-                         
-                         {(errorMsg.type === 'quota' || errorMsg.type === 'info') && (
-                           <div className="flex flex-col items-center gap-3">
-                              <a 
-                                href="https://ai.google.dev/gemini-api/docs/billing" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 text-[8px] text-white/20 uppercase tracking-widest font-medium hover:text-brand-primary transition-colors"
-                              >
-                                <ExternalLink size={10} />
-                                {isAr ? 'تعرف على حصص Gemini API والفوترة' : 'Learn about Gemini API Quotas & Billing'}
-                              </a>
-                           </div>
-                         )}
                       </div>
                     ) : status === 'success' && lastAnalysisResult ? (
                       <div className="w-full space-y-4 lg:space-y-6 animate-fade-in h-full flex flex-col justify-center">

@@ -68,9 +68,9 @@ export default async function handler(req: any, res: any) {
       ? `حلل هذا الطبق بدقة مذهلة لشخص يتبع بروتوكول ${persona}. قدم النتيجة باللغة العربية حصراً وبتنسيق JSON.`
       : `Analyze this dish with clinical precision for a user following the ${persona} protocol. Response must be entirely in English and formatted as JSON.`;
 
-    // ترقية الموديل لزيادة احتمالية قبول الطلب عند ازدحام الحصة المجانية
+    // استخدام Gemini 3 Flash لضمان أداء مستقر وحصة طلبات أوسع
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: {
         parts: [
           { inlineData: { data: base64Data, mimeType: 'image/jpeg' } },
@@ -80,8 +80,7 @@ export default async function handler(req: any, res: any) {
       config: { 
         responseMimeType: "application/json", 
         responseSchema: mealAnalysisSchema,
-        temperature: 0.1,
-        thinkingConfig: { thinkingBudget: 2000 }
+        temperature: 0.1
       }
     });
 
@@ -103,7 +102,7 @@ export default async function handler(req: any, res: any) {
     if (isQuota) {
       return res.status(429).json({ 
         error: 'QUOTA_EXCEEDED', 
-        details: 'QUOTA_LIMIT: Shared laboratory limit reached for today.' 
+        details: 'Shared lab quota reached. Connect personal key for unlimited access.' 
       });
     }
 
